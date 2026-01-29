@@ -5,69 +5,50 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 interface MasonryGridProps {
   children: ReactNode[];
   className?: string;
-  columnWidth?: number;
   gap?: number;
 }
 
 export default function MasonryGrid({ 
   children, 
   className = "",
-  columnWidth = 280,
-  gap = 16
+  gap = 12
 }: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [columns, setColumns] = useState(1);
-  const [columnHeights, setColumnHeights] = useState<number[]>([]);
+  const [columns, setColumns] = useState(2);
 
   useEffect(() => {
     const updateColumns = () => {
       if (containerRef.current) {
-        const containerWidth = containerRef.current.offsetWidth;
-        const newColumns = Math.max(1, Math.floor(containerWidth / columnWidth));
-        setColumns(newColumns);
-        setColumnHeights(new Array(newColumns).fill(0));
+        const w = containerRef.current.offsetWidth;
+        if (w < 500) setColumns(2);
+        else if (w < 768) setColumns(3);
+        else setColumns(4);
       }
     };
 
     updateColumns();
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
-  }, [columnWidth]);
+  }, []);
 
   const getColumnItems = () => {
-    const columnItems: ReactNode[][] = Array(columns).fill(null).map(() => []);
-    
-    children.forEach((child, index) => {
-      if (columnHeights.length > 0) {
-        // Find the column with the smallest height
-        const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
-        columnItems[shortestColumnIndex].push(
-          <div key={index} className="mb-4">
-            {child}
-          </div>
-        );
-        
-        // Estimate height increase (this is approximate)
-        columnHeights[shortestColumnIndex] += 300; // Estimated height
-      }
+    const cols: ReactNode[][] = Array.from({ length: columns }, () => []);
+    children.forEach((child, i) => {
+      cols[i % columns].push(
+        <div key={i} style={{ marginBottom: `${gap}px` }}>
+          {child}
+        </div>
+      );
     });
-
-    return columnItems;
+    return cols;
   };
 
   return (
-    <div ref={containerRef} className={`w-full ${className}`}>
-      <div 
-        className="flex gap-4"
-        style={{ gap: `${gap}px` }}
-      >
-        {getColumnItems().map((columnChildren, columnIndex) => (
-          <div
-            key={columnIndex}
-            className="flex-1"
-            style={{ minWidth: `${columnWidth}px` }}
-          >
-            {columnChildren}
+    <div ref={containerRef} className={className} style={{ width: '100%' }}>
+      <div style={{ display: 'flex', gap: `${gap}px` }}>
+        {getColumnItems().map((colChildren, i) => (
+          <div key={i} style={{ flex: 1, minWidth: 0 }}>
+            {colChildren}
           </div>
         ))}
       </div>

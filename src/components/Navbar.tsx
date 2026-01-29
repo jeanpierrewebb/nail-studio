@@ -2,80 +2,110 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+
+const navLinks = [
+  { href: '/', label: 'Home', emoji: '🏠' },
+  { href: '/search', label: 'Search', emoji: '🔍' },
+  { href: '/ideas', label: 'Ideas', emoji: '💡' },
+  { href: '/collections', label: 'Collections', emoji: '📁' },
+  { href: '/suggest', label: 'Suggest', emoji: '✨' },
+];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="bg-white border-b border-pink-200 sticky top-0 z-50 shadow-soft">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xl font-bold">💅</span>
+    <>
+      {/* Desktop / Tablet Top Nav */}
+      <nav style={{ backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #fce7f3' }}
+           className="sticky top-0 z-50">
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '4rem' }}>
+            {/* Logo */}
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+              <span style={{ fontSize: '1.5rem' }}>💅</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 600, color: '#db2777' }}>
+                Nail Studio
+              </span>
+            </Link>
+
+            {/* Desktop Links */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                 className="hidden sm:flex">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    textDecoration: 'none',
+                    transition: 'all 0.2s',
+                    backgroundColor: isActive(link.href) ? '#fce7f3' : 'transparent',
+                    color: isActive(link.href) ? '#be185d' : '#6b7280',
+                  }}
+                >
+                  {link.label}
+                </Link>
+              ))}
             </div>
-            <span className="text-xl font-semibold bg-gradient-to-r from-pink-600 to-rose-gold bg-clip-text text-transparent">
-              Nail Studio
-            </span>
-          </Link>
 
-          {/* Navigation Links */}
-          <div className="hidden sm:flex items-center space-x-8">
-            <Link 
-              href="/" 
-              className={`font-medium transition-colors duration-200 ${
-                isActive('/') 
-                  ? 'text-pink-600 border-b-2 border-pink-600' 
-                  : 'text-gray-600 hover:text-pink-600'
-              }`}
+            {/* Mobile hamburger - hidden on sm+ */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="sm:hidden"
+              style={{ padding: '0.5rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
             >
-              Home
-            </Link>
-            <Link 
-              href="/ideas" 
-              className={`font-medium transition-colors duration-200 ${
-                isActive('/ideas') 
-                  ? 'text-pink-600 border-b-2 border-pink-600' 
-                  : 'text-gray-600 hover:text-pink-600'
-              }`}
-            >
-              My Ideas
-            </Link>
-            <Link 
-              href="/collections" 
-              className={`font-medium transition-colors duration-200 ${
-                isActive('/collections') 
-                  ? 'text-pink-600 border-b-2 border-pink-600' 
-                  : 'text-gray-600 hover:text-pink-600'
-              }`}
-            >
-              Collections
-            </Link>
-            <Link 
-              href="/suggest" 
-              className={`font-medium transition-colors duration-200 ${
-                isActive('/suggest') 
-                  ? 'text-pink-600 border-b-2 border-pink-600' 
-                  : 'text-gray-600 hover:text-pink-600'
-              }`}
-            >
-              Help Me Decide
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="sm:hidden">
-            <button className="text-gray-600 hover:text-pink-600 focus:outline-none">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
           </div>
         </div>
+      </nav>
+
+      {/* Mobile Bottom Tab Bar */}
+      <div className="sm:hidden" style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        backgroundColor: 'rgba(255,255,255,0.97)',
+        backdropFilter: 'blur(12px)',
+        borderTop: '1px solid #fce7f3',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '3.5rem', padding: '0 0.25rem' }}>
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '3rem',
+                minHeight: '3rem',
+                textDecoration: 'none',
+                color: isActive(link.href) ? '#db2777' : '#9ca3af',
+                fontSize: '0.625rem',
+                fontWeight: isActive(link.href) ? 600 : 400,
+              }}
+            >
+              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{link.emoji}</span>
+              <span style={{ marginTop: '2px' }}>{link.label}</span>
+            </Link>
+          ))}
+        </div>
       </div>
-    </nav>
+    </>
   );
 }

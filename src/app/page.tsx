@@ -5,7 +5,6 @@ import SearchBar from '@/components/SearchBar';
 import MasonryGrid from '@/components/MasonryGrid';
 import ImageCard from '@/components/ImageCard';
 
-// Sample data for demonstration
 const trendingImages = [
   {
     id: '1',
@@ -66,77 +65,51 @@ const trendingImages = [
 export default function Home() {
   const handleSave = async (id: string) => {
     console.log('Saving image:', id);
-    // TODO: Implement save to database
   };
 
   const handleUnsave = async (id: string) => {
     console.log('Unsaving image:', id);
-    // TODO: Implement unsave from database
   };
 
   return (
-    <div className="min-h-screen" 
-         style={{ 
-           background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' 
-         }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom, #fdf2f8, white 40%)' }}>
       <Navbar />
       
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6">
-              Discover Your Perfect{' '}
-              <span className="bg-gradient-to-r from-pink-500 to-rose-gold bg-clip-text text-transparent">
-                Nail Art
-              </span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Find inspiration from thousands of nail art designs, save your favorites, 
-              and create beautiful collections for your next manicure
-            </p>
-            
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-12">
-              <SearchBar className="w-full" />
-            </div>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 max-w-md mx-auto">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-pink-600">10K+</div>
-                <div className="text-sm text-gray-600">Nail Designs</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-pink-600">500+</div>
-                <div className="text-sm text-gray-600">Collections</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-pink-600">1K+</div>
-                <div className="text-sm text-gray-600">Artists</div>
-              </div>
-            </div>
-          </div>
+      {/* Hero — compact, search-first */}
+      <div style={{ padding: '2rem 1rem 1.5rem', textAlign: 'center' }}>
+        <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💅✨</div>
+          
+          <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.75rem)', fontWeight: 700, color: '#111827', marginBottom: '0.5rem', lineHeight: 1.2 }}>
+            Find Your Next{' '}
+            <span style={{ color: '#ec4899' }}>Nail Look</span>
+          </h1>
+          <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', color: '#6b7280', marginBottom: '1.5rem', maxWidth: '28rem', marginLeft: 'auto', marginRight: 'auto' }}>
+            Search thousands of designs, save your faves, and get inspired
+          </p>
+          
+          <SearchBar size="hero" />
         </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 opacity-20 blur-xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 rounded-full bg-gradient-to-br from-rose-gold to-pink-400 opacity-20 blur-xl"></div>
       </div>
 
       {/* Trending Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Trending Now</h2>
-            <p className="text-gray-600">The hottest nail art designs everyone is loving</p>
-          </div>
-          <button className="btn-secondary">
-            View All Trends
+      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem 1rem 2rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: 'clamp(1.125rem, 3vw, 1.5rem)', fontWeight: 700, color: '#111827' }}>
+            Trending Now 🔥
+          </h2>
+          <button style={{
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            color: '#db2777',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}>
+            View All →
           </button>
         </div>
 
-        {/* Masonry Grid */}
         <MasonryGrid>
           {trendingImages.map((image) => (
             <ImageCard
@@ -150,20 +123,48 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <div className="bg-gradient-to-r from-pink-500 to-rose-gold">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Create Your Dream Nails?
+      <div style={{ padding: '0 1rem 6rem' }}>
+        <div style={{
+          maxWidth: '42rem',
+          margin: '0 auto',
+          background: 'linear-gradient(135deg, #ec4899, #f472b6)',
+          borderRadius: '1.25rem',
+          padding: 'clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 4vw, 2.5rem)',
+          textAlign: 'center',
+        }}>
+          <h2 style={{ fontSize: 'clamp(1.125rem, 3vw, 1.5rem)', fontWeight: 700, color: 'white', marginBottom: '0.5rem' }}>
+            Ready to create your dream nails? 💖
           </h2>
-          <p className="text-pink-100 text-lg mb-8 max-w-2xl mx-auto">
-            Start building your personal collection of nail art inspiration. 
-            Save your favorites and never run out of ideas!
+          <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(0.8125rem, 2vw, 1rem)', marginBottom: '1.25rem', maxWidth: '28rem', marginLeft: 'auto', marginRight: 'auto' }}>
+            Start building your personal collection of nail art inspiration
           </p>
-          <div className="space-x-4">
-            <button className="bg-white text-pink-600 font-semibold py-3 px-8 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
+            <button style={{
+              backgroundColor: 'white',
+              color: '#db2777',
+              fontWeight: 600,
+              padding: '0.75rem 2rem',
+              borderRadius: '9999px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '0.9375rem',
+              minHeight: '48px',
+              width: 'fit-content',
+            }}>
               Start Collecting
             </button>
-            <button className="bg-transparent border-2 border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-white hover:text-pink-600 transition-colors duration-200">
+            <button style={{
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              fontWeight: 600,
+              padding: '0.75rem 2rem',
+              borderRadius: '9999px',
+              border: '1px solid rgba(255,255,255,0.4)',
+              cursor: 'pointer',
+              fontSize: '0.9375rem',
+              minHeight: '48px',
+              width: 'fit-content',
+            }}>
               Browse Ideas
             </button>
           </div>

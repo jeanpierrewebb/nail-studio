@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Idea {
+  id               String             @id @default(cuid())
+  title            String
+  description      String?
+  tags             String             // Stored as JSON string
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  inspirationImages InspirationImage[]
+}
+
+model InspirationImage {
+  id           String     @id @default(cuid())
+  sourceUrl    String
+  imageUrl     String
+  source       String
+  title        String?
+  description  String?
+  saved        Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  ideaId       String?
+  collectionId String?
+  idea         Idea?      @relation(fields: [ideaId], references: [id])
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+}
+
+model Collection {
+  id               String             @id @default(cuid())
+  name             String
+  description      String?
+  coverImageUrl    String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  inspirationImages InspirationImage[]
+}
+
+model TrendItem {
+  id         String   @id @default(cuid())
+  imageUrl   String
+  sourceUrl  String
+  source     String
+  title      String?
+  trendScore Int      @default(0)
+  scrapedAt  DateTime @default(now())
+}

@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💅 Nail Studio
 
-## Getting Started
+A beautiful nail art inspiration portal built for Elena, featuring a modern pink-themed design with Pinterest-style layouts.
 
-First, run the development server:
+## 🌟 Features
 
+- **🎨 Beautiful Pink Theme**: Soft pinks, hot pink accents, and rose gold highlights
+- **📱 Mobile-First Design**: Optimized for phone usage with responsive layouts  
+- **🔍 Smart Search**: Powered by Brave Search API for nail art inspiration
+- **📌 Pinterest-Style Grid**: Masonry layout for browsing nail designs
+- **💾 Save & Organize**: Create collections and save your favorite ideas
+- **🤔 AI Suggestions**: "Help Me Decide" feature for personalized recommendations
+- **✨ Modern UI**: Clean components with soft shadows and rounded corners
+
+## 🚀 Live Demo
+
+- **Production**: https://nail-studio-poralp921-jean-pierre-webbs-projects.vercel.app
+- **Aliased**: https://nail-studio-orcin.vercel.app
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 with App Router
+- **Styling**: Tailwind CSS with custom pink theme
+- **Typography**: Poppins font family
+- **Database**: Prisma (currently mocked for v1)
+- **Deployment**: Vercel
+- **Search API**: Brave Search API
+- **Language**: TypeScript
+
+## 📱 Pages
+
+- **🏠 Home**: Hero section with trending nail art grid
+- **🔍 Search**: Search for nail art with smart filtering
+- **💡 Ideas**: Save and organize your nail art inspirations  
+- **📁 Collections**: Pinterest-style boards for organizing designs
+- **🎯 Help Me Decide**: AI-powered suggestions based on preferences
+
+## 🎨 Design System
+
+### Colors
+- **Primary Pink**: #ec4899
+- **Soft Pink**: #fdf2f8, #fce7f3
+- **Rose Gold**: #f59e0b
+- **Backgrounds**: Gradient from soft pink to white
+
+### Components
+- **Navbar**: Responsive navigation with gradient logo
+- **SearchBar**: Prominent search with popular suggestions
+- **MasonryGrid**: Pinterest-style responsive layout
+- **ImageCard**: Nail art display with save/source actions
+- **Modal**: Clean modals for creating collections/ideas
+
+## 🚦 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Installation
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd nail-studio
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.local.example .env.local
+# Add your BRAVE_API_KEY
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
+```env
+BRAVE_API_KEY=your_brave_search_api_key
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏗️ Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                 # App Router pages
+│   ├── api/            # API routes (search, collections, ideas)
+│   ├── collections/    # Collections page
+│   ├── ideas/          # Ideas page  
+│   ├── search/         # Search page
+│   ├── suggest/        # Help Me Decide page
+│   └── page.tsx        # Home page
+├── components/         # Reusable UI components
+│   ├── ImageCard.tsx   # Nail art image display
+│   ├── MasonryGrid.tsx # Pinterest-style grid
+│   ├── Navbar.tsx      # Main navigation
+│   └── SearchBar.tsx   # Search component
+└── lib/
+    └── prisma.ts       # Database client (mocked)
+```
 
-## Learn More
+## 📋 Todo / Future Features
 
-To learn more about Next.js, take a look at the following resources:
+- [ ] **Real Database**: Replace mock Prisma with actual Turso database
+- [ ] **User Authentication**: User accounts and personal collections
+- [ ] **Social Features**: Share collections and follow other users
+- [ ] **Advanced AI**: Smarter nail art recommendations
+- [ ] **Trend Analysis**: Track popular nail art trends over time
+- [ ] **Photo Upload**: Allow users to upload their own nail photos
+- [ ] **Tutorial Integration**: Step-by-step nail art tutorials
+- [ ] **Shopping Integration**: Links to nail products and tools
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Built For Elena
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This nail art inspiration portal was specifically designed for Elena (JP's 12-year-old daughter), with:
+- **Mobile-friendly interface** for easy browsing on her phone
+- **Beautiful pink aesthetic** matching her style preferences  
+- **Simple, intuitive navigation** that's easy to understand
+- **Visual-first experience** perfect for discovering nail art inspiration
+- **Safe, curated content** appropriate for young users
 
-## Deploy on Vercel
+## 🚀 Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app is automatically deployed to Vercel on every push to the main branch.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Manual Deployment
+```bash
+npm run build
+npx vercel --prod
+```
+
+## 📄 License
+
+Built with ❤️ for Elena by George (AI)

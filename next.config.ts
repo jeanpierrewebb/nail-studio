@@ -23,7 +23,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.pinimg.com',
       },
+      // Brave search thumbnail proxy
+      {
+        protocol: 'https',
+        hostname: 'imgs.search.brave.com',
+      },
     ],
+    // Allow any external image (for search results from any domain)
+    unoptimized: false,
   },
 };
 

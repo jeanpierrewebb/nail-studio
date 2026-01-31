@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import MasonryGrid from '@/components/MasonryGrid';
@@ -8,56 +9,56 @@ import ImageCard from '@/components/ImageCard';
 const trendingImages = [
   {
     id: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=600&fit=crop',
-    title: 'French Tip Elegance',
-    description: 'Classic French tips with a modern twist',
-    source: 'Pinterest',
-    sourceUrl: 'https://pinterest.com',
+    imageUrl: 'https://images.unsplash.com/photo-1754799670410-b282791342c3?w=400&h=600&fit=crop',
+    title: 'Heart Design Nails',
+    description: 'White and pink heart-designed nails — so cute!',
+    source: 'Unsplash',
+    sourceUrl: 'https://unsplash.com',
     saved: false,
   },
   {
     id: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&h=500&fit=crop',
-    title: 'Ombre Dreams',
-    description: 'Beautiful pink to white ombre gradient',
-    source: 'Instagram',
-    sourceUrl: 'https://instagram.com',
-    saved: true,
+    imageUrl: 'https://images.unsplash.com/photo-1727199433231-346fd8101839?w=400&h=500&fit=crop',
+    title: 'Pretty Pink Manicure',
+    description: 'Beautiful pink manicure for every occasion',
+    source: 'Unsplash',
+    sourceUrl: 'https://unsplash.com',
+    saved: false,
   },
   {
     id: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1583847998741-a5a2b8b6aa9f?w=400&h=550&fit=crop',
-    title: 'Floral Fantasy',
-    description: 'Delicate floral patterns perfect for spring',
-    source: 'TikTok',
-    sourceUrl: 'https://tiktok.com',
+    imageUrl: 'https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?w=400&h=550&fit=crop',
+    title: 'Classic Manicure',
+    description: 'Clean and elegant nail art design',
+    source: 'Unsplash',
+    sourceUrl: 'https://unsplash.com',
     saved: false,
   },
   {
     id: '4',
-    imageUrl: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=450&fit=crop',
-    title: 'Geometric Glam',
-    description: 'Bold geometric patterns with metallic accents',
-    source: 'Pinterest',
-    sourceUrl: 'https://pinterest.com',
+    imageUrl: 'https://images.unsplash.com/photo-1586973762963-9c610b87803d?w=400&h=450&fit=crop',
+    title: 'Red & Gold Glam',
+    description: 'Stunning red and gold manicure for special occasions',
+    source: 'Unsplash',
+    sourceUrl: 'https://unsplash.com',
     saved: false,
   },
   {
     id: '5',
-    imageUrl: 'https://images.unsplash.com/photo-1515688594390-b649af70d282?w=400&h=600&fit=crop',
-    title: 'Glitter Galaxy',
-    description: 'Sparkly galaxy-inspired nail art',
-    source: 'Reddit',
-    sourceUrl: 'https://reddit.com',
-    saved: true,
+    imageUrl: 'https://images.unsplash.com/photo-1743617206507-447c78118622?w=400&h=600&fit=crop',
+    title: 'Purple Dreams',
+    description: 'Bold purple painted nails to stand out',
+    source: 'Unsplash',
+    sourceUrl: 'https://unsplash.com',
+    saved: false,
   },
   {
     id: '6',
-    imageUrl: 'https://images.unsplash.com/photo-1574169208507-843761746b59?w=400&h=500&fit=crop',
-    title: 'Pastel Paradise',
-    description: 'Soft pastel colors for a dreamy look',
-    source: 'Instagram',
-    sourceUrl: 'https://instagram.com',
+    imageUrl: 'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=400&h=500&fit=crop',
+    title: 'Pink Perfection',
+    description: 'Soft pink nails on a dreamy surface',
+    source: 'Unsplash',
+    sourceUrl: 'https://unsplash.com',
     saved: false,
   },
 ];
@@ -98,16 +99,17 @@ export default function Home() {
           <h2 style={{ fontSize: 'clamp(1.125rem, 3vw, 1.5rem)', fontWeight: 700, color: '#111827' }}>
             Trending Now 🔥
           </h2>
-          <button style={{
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            color: '#db2777',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-          }}>
+          <Link
+            href="/search"
+            style={{
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              color: '#db2777',
+              textDecoration: 'none',
+            }}
+          >
             View All →
-          </button>
+          </Link>
         </div>
 
         <MasonryGrid>
@@ -139,34 +141,46 @@ export default function Home() {
             Start building your personal collection of nail art inspiration
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
-            <button style={{
-              backgroundColor: 'white',
-              color: '#db2777',
-              fontWeight: 600,
-              padding: '0.75rem 2rem',
-              borderRadius: '9999px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '0.9375rem',
-              minHeight: '48px',
-              width: 'fit-content',
-            }}>
+            <Link
+              href="/collections"
+              style={{
+                backgroundColor: 'white',
+                color: '#db2777',
+                fontWeight: 600,
+                padding: '0.75rem 2rem',
+                borderRadius: '9999px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.9375rem',
+                minHeight: '48px',
+                width: 'fit-content',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
               Start Collecting
-            </button>
-            <button style={{
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              fontWeight: 600,
-              padding: '0.75rem 2rem',
-              borderRadius: '9999px',
-              border: '1px solid rgba(255,255,255,0.4)',
-              cursor: 'pointer',
-              fontSize: '0.9375rem',
-              minHeight: '48px',
-              width: 'fit-content',
-            }}>
+            </Link>
+            <Link
+              href="/ideas"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                fontWeight: 600,
+                padding: '0.75rem 2rem',
+                borderRadius: '9999px',
+                border: '1px solid rgba(255,255,255,0.4)',
+                cursor: 'pointer',
+                fontSize: '0.9375rem',
+                minHeight: '48px',
+                width: 'fit-content',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+              }}
+            >
               Browse Ideas
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -40,7 +40,7 @@ export default function SuggestPage() {
           id: 1,
           title: 'Classic French Tips',
           description: 'Perfect for your professional setting with a timeless appeal',
-          imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&h=400&fit=crop',
+          imageUrl: 'https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?w=300&h=400&fit=crop',
           matchScore: 95,
           reasons: ['Professional appearance', 'Low maintenance', 'Timeless style']
         },
@@ -48,17 +48,17 @@ export default function SuggestPage() {
           id: 2,
           title: 'Soft Pink Ombre',
           description: 'Elegant gradient that works for any occasion',
-          imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300&h=400&fit=crop',
+          imageUrl: 'https://images.unsplash.com/photo-1727199433231-346fd8101839?w=300&h=400&fit=crop',
           matchScore: 88,
           reasons: ['Versatile for work and play', 'Matches your color preference', 'Medium maintenance']
         },
         {
           id: 3,
-          title: 'Minimalist Nude',
-          description: 'Clean and sophisticated for the modern professional',
-          imageUrl: 'https://images.unsplash.com/photo-1583847998741-a5a2b8b6aa9f?w=300&h=400&fit=crop',
+          title: 'Red & Gold Glam',
+          description: 'Stunning red and gold manicure for special events',
+          imageUrl: 'https://images.unsplash.com/photo-1586973762963-9c610b87803d?w=300&h=400&fit=crop',
           matchScore: 82,
-          reasons: ['Ultra-professional', 'Very low maintenance', 'Suits any outfit']
+          reasons: ['Eye-catching design', 'Perfect for events', 'Suits any outfit']
         }
       ];
       

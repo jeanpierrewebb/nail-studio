@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
@@ -10,65 +10,37 @@ import SaveToCollectionModal from '@/components/SaveToCollectionModal';
 import ImageLightbox, { type LightboxImage } from '@/components/ImageLightbox';
 import { useToast } from '@/contexts/ToastContext';
 
-const trendingImages = [
-  {
-    id: '1',
-    imageUrl: 'https://images.unsplash.com/photo-1754799670410-b282791342c3?w=400&h=600&fit=crop',
-    title: 'Heart Design Nails',
-    description: 'White and pink heart-designed nails — so cute!',
-    source: 'Unsplash',
-    sourceUrl: 'https://unsplash.com',
-    saved: false,
-  },
-  {
-    id: '2',
-    imageUrl: 'https://images.unsplash.com/photo-1727199433231-346fd8101839?w=400&h=500&fit=crop',
-    title: 'Pretty Pink Manicure',
-    description: 'Beautiful pink manicure for every occasion',
-    source: 'Unsplash',
-    sourceUrl: 'https://unsplash.com',
-    saved: false,
-  },
-  {
-    id: '3',
-    imageUrl: 'https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?w=400&h=550&fit=crop',
-    title: 'Classic Manicure',
-    description: 'Clean and elegant nail art design',
-    source: 'Unsplash',
-    sourceUrl: 'https://unsplash.com',
-    saved: false,
-  },
-  {
-    id: '4',
-    imageUrl: 'https://images.unsplash.com/photo-1586973762963-9c610b87803d?w=400&h=450&fit=crop',
-    title: 'Red & Gold Glam',
-    description: 'Stunning red and gold manicure for special occasions',
-    source: 'Unsplash',
-    sourceUrl: 'https://unsplash.com',
-    saved: false,
-  },
-  {
-    id: '5',
-    imageUrl: 'https://images.unsplash.com/photo-1743617206507-447c78118622?w=400&h=600&fit=crop',
-    title: 'Purple Dreams',
-    description: 'Bold purple painted nails to stand out',
-    source: 'Unsplash',
-    sourceUrl: 'https://unsplash.com',
-    saved: false,
-  },
-  {
-    id: '6',
-    imageUrl: 'https://images.unsplash.com/photo-1604902396830-aca29e19b067?w=400&h=500&fit=crop',
-    title: 'Pink Perfection',
-    description: 'Soft pink nails on a dreamy surface',
-    source: 'Unsplash',
-    sourceUrl: 'https://unsplash.com',
-    saved: false,
-  },
+interface TrendingImage {
+  id: string;
+  imageUrl: string;
+  title: string;
+  description: string;
+  source: string;
+  sourceUrl: string;
+  saved: boolean;
+}
+
+const TRENDING_QUERIES = [
+  'trending nail art 2026',
+  'aesthetic nail designs',
+  'cute nail art ideas',
+  'nail art inspiration',
+  'press on nails design',
+  'gel nails aesthetic',
+  'nail art aesthetic pinterest',
+  'acrylic nail art trendy',
 ];
+
+function pickQuery(): string {
+  return TRENDING_QUERIES[Math.floor(Math.random() * TRENDING_QUERIES.length)];
+}
 
 export default function Home() {
   const toast = useToast();
+  const [trendingImages, setTrendingImages] = useState<TrendingImage[]>([]);
+  const [loadingTrending, setLoadingTrending] = useState(true);
+  const [trendingError, setTrendingError] = useState(false);
+
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveModalImage, setSaveModalImage] = useState<{
     imageUrl: string;
@@ -78,9 +50,46 @@ export default function Home() {
     description?: string;
   } | null>(null);
 
-  // Lightbox
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Fetch trending images on mount — cache in sessionStorage
+  useEffect(() => {
+    const CACHE_KEY = 'nailstudio_trending';
+    const CACHE_TTL = 30 * 60 * 1000; // 30 min
+
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { images, ts } = JSON.parse(cached);
+        if (Date.now() - ts < CACHE_TTL && images?.length > 0) {
+          setTrendingImages(images);
+          setLoadingTrending(false);
+          return;
+        }
+      }
+    } catch {}
+
+    const query = pickQuery();
+    fetch(`/api/search?q=${encodeURIComponent(query)}&count=12`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.results?.length > 0) {
+          const images = data.results.slice(0, 12).map((r: any) => ({
+            ...r,
+            saved: false,
+          }));
+          setTrendingImages(images);
+          try {
+            sessionStorage.setItem(CACHE_KEY, JSON.stringify({ images, ts: Date.now() }));
+          } catch {}
+        } else {
+          setTrendingError(true);
+        }
+      })
+      .catch(() => setTrendingError(true))
+      .finally(() => setLoadingTrending(false));
+  }, []);
 
   const handleSaveToCollection = (imageData: {
     imageUrl: string;
@@ -145,16 +154,35 @@ export default function Home() {
           </Link>
         </div>
 
-        <MasonryGrid>
-          {trendingImages.map((image, idx) => (
-            <ImageCard
-              key={image.id}
-              {...image}
-              onSaveToCollection={handleSaveToCollection}
-              onImageClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
-            />
-          ))}
-        </MasonryGrid>
+        {loadingTrending ? (
+          <MasonryGrid>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="card animate-pulse" style={{ minHeight: `${200 + (i % 3) * 80}px`, background: 'linear-gradient(135deg, #fce7f3, #fbcfe8)' }}>
+                <div className="w-full h-full" style={{ minHeight: `${180 + (i % 3) * 80}px`, background: 'linear-gradient(135deg, #fce7f3, #fbcfe8)' }} />
+                <div className="px-3 pt-2.5 pb-3">
+                  <div className="h-3 bg-pink-100 rounded w-3/4 mb-2" />
+                  <div className="h-2.5 bg-pink-50 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </MasonryGrid>
+        ) : trendingError || trendingImages.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 text-sm mb-3">Couldn&apos;t load trending images right now</p>
+            <Link href="/search" className="btn-primary text-sm">Search for nail art →</Link>
+          </div>
+        ) : (
+          <MasonryGrid>
+            {trendingImages.map((image, idx) => (
+              <ImageCard
+                key={image.id}
+                {...image}
+                onSaveToCollection={handleSaveToCollection}
+                onImageClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
+              />
+            ))}
+          </MasonryGrid>
+        )}
       </div>
 
       {/* CTA Section */}

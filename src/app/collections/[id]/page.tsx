@@ -176,6 +176,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
     source: img.source,
     sourceUrl: img.sourceUrl,
     description: img.description || undefined,
+    notes: img.notes,
   }));
 
   return (
@@ -285,6 +286,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                   source={image.source}
                   sourceUrl={image.sourceUrl}
                   saved={true}
+                  notes={image.notes}
                   onImageClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                 />
                 {/* Remove from collection button — always visible on mobile */}

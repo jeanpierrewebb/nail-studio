@@ -48,6 +48,7 @@ export default function SavesPage() {
     source: img.source,
     sourceUrl: img.sourceUrl,
     description: img.description || undefined,
+    notes: img.notes,
   }));
 
   const handleLightboxSave = (img: LightboxImage) => {
@@ -135,6 +136,7 @@ export default function SavesPage() {
                 source={image.source}
                 sourceUrl={image.sourceUrl}
                 saved={true}
+                notes={image.notes}
                 onSaveToCollection={handleSaveToCollection}
                 onImageClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
               />

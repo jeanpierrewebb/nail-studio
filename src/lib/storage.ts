@@ -17,6 +17,7 @@ export interface StoredImage {
   source: string;
   title: string | null;
   description: string | null;
+  notes?: string;
   savedAt: string;
   collectionIds: string[]; // image can be in multiple collections
 }
@@ -166,6 +167,20 @@ export function removeImageFromCollection(imageId: string, collectionId: string)
   image.collectionIds = image.collectionIds.filter(cid => cid !== collectionId);
   localStorage.setItem(IMAGES_KEY, JSON.stringify(images));
   return true;
+}
+
+export function updateImageNotes(imageId: string, notes: string): boolean {
+  const images = getSavedImages();
+  const image = images.find(img => img.id === imageId);
+  if (!image) return false;
+  
+  image.notes = notes;
+  localStorage.setItem(IMAGES_KEY, JSON.stringify(images));
+  return true;
+}
+
+export function getImageById(imageId: string): StoredImage | null {
+  return getSavedImages().find(img => img.id === imageId) || null;
 }
 
 export function getCollectionWithImages(collectionId: string) {

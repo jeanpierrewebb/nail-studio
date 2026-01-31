@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { updateImageNotes, getSavedImages } from '@/lib/storage';
+import { useToast } from '@/contexts/ToastContext';
 
 export interface LightboxImage {
   id: string;
@@ -27,13 +29,29 @@ export default function ImageLightbox({
   onClose,
   onSave,
 }: ImageLightboxProps) {
+  const toast = useToast();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [notesValue, setNotesValue] = useState('');
+  const [isSavedImage, setIsSavedImage] = useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
   useEffect(() => {
     if (isOpen) setCurrentIndex(initialIndex);
   }, [isOpen, initialIndex]);
+
+  // Update notes when current image changes
+  useEffect(() => {
+    if (!isOpen || images.length === 0) return;
+    const img = images[currentIndex];
+    if (!img) return;
+
+    // Check if this image exists in saved images (has notes capability)
+    const saved = getSavedImages();
+    const savedImg = saved.find((s) => s.imageUrl === img.imageUrl || s.id === img.id);
+    setIsSavedImage(!!savedImg);
+    setNotesValue(savedImg?.notes || img.notes || '');
+  }, [isOpen, currentIndex, images]);
 
   // Lock body scroll when open
   useEffect(() => {
@@ -62,6 +80,21 @@ export default function ImageLightbox({
     [images.length],
   );
 
+  const handleNotesBlur = () => {
+    const img = images[currentIndex];
+    if (!img) return;
+
+    const saved = getSavedImages();
+    const savedImg = saved.find((s) => s.imageUrl === img.imageUrl || s.id === img.id);
+    if (savedImg) {
+      const oldNotes = savedImg.notes || '';
+      if (notesValue !== oldNotes) {
+        updateImageNotes(savedImg.id, notesValue);
+        toast.success('Note saved! 📝');
+      }
+    }
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = e.touches[0].clientX;
@@ -74,8 +107,8 @@ export default function ImageLightbox({
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
     const threshold = 50;
-    if (diff > threshold) goTo(currentIndex + 1); // swipe left → next
-    else if (diff < -threshold) goTo(currentIndex - 1); // swipe right → prev
+    if (diff > threshold) goTo(currentIndex + 1);
+    else if (diff < -threshold) goTo(currentIndex - 1);
   };
 
   if (!isOpen || images.length === 0) return null;
@@ -84,18 +117,10 @@ export default function ImageLightbox({
   if (!img) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[80] bg-black/90 flex flex-col"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-[80] bg-black/90 flex flex-col" onClick={onClose}>
       {/* Top bar */}
-      <div
-        className="flex items-center justify-between p-3 sm:p-4 flex-shrink-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span className="text-white/70 text-sm">
-          {currentIndex + 1} / {images.length}
-        </span>
+      <div className="flex items-center justify-between p-3 sm:p-4 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+        <span className="text-white/70 text-sm">{currentIndex + 1} / {images.length}</span>
         <button
           onClick={onClose}
           className="p-2 text-white hover:bg-white/20 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -115,7 +140,6 @@ export default function ImageLightbox({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Prev arrow (desktop) */}
         {currentIndex > 0 && (
           <button
             onClick={() => goTo(currentIndex - 1)}
@@ -138,7 +162,6 @@ export default function ImageLightbox({
           draggable={false}
         />
 
-        {/* Next arrow (desktop) */}
         {currentIndex < images.length - 1 && (
           <button
             onClick={() => goTo(currentIndex + 1)}
@@ -154,17 +177,16 @@ export default function ImageLightbox({
 
       {/* Bottom info bar */}
       <div
-        className="flex-shrink-0 bg-black/60 backdrop-blur-sm"
+        className="flex-shrink-0 bg-black/60 backdrop-blur-sm overflow-y-auto max-h-[40vh]"
         onClick={(e) => e.stopPropagation()}
         style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <div className="px-4 pt-3 pb-3 max-w-2xl mx-auto">
           {img.title && (
-            <h3 className="text-white font-semibold text-sm sm:text-base mb-1 line-clamp-2">
-              {img.title}
-            </h3>
+            <h3 className="text-white font-semibold text-sm sm:text-base mb-1 line-clamp-2">{img.title}</h3>
           )}
-          <div className="flex items-center justify-between gap-3">
+
+          <div className="flex items-center justify-between gap-3 mb-3">
             <a
               href={img.sourceUrl}
               target="_blank"
@@ -183,6 +205,20 @@ export default function ImageLightbox({
               Save to Collection
             </button>
           </div>
+
+          {/* Notes area — only for saved images */}
+          {isSavedImage && (
+            <div>
+              <textarea
+                value={notesValue}
+                onChange={(e) => setNotesValue(e.target.value)}
+                onBlur={handleNotesBlur}
+                placeholder="Add a note about this design..."
+                rows={2}
+                className="w-full bg-white/10 text-white placeholder-white/40 rounded-lg p-3 text-sm border border-white/20 focus:border-pink-400 focus:outline-none resize-none"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

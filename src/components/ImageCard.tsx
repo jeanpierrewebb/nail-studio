@@ -10,7 +10,9 @@ interface ImageCardProps {
   source: string;
   sourceUrl: string;
   saved?: boolean;
+  notes?: string;
   onSaveToCollection?: (imageData: { imageUrl: string; sourceUrl: string; source: string; title?: string; description?: string }) => void;
+  onImageClick?: () => void;
   onSave?: (id: string) => void;
   onUnsave?: (id: string) => void;
   className?: string;
@@ -24,7 +26,9 @@ export default function ImageCard({
   source,
   sourceUrl,
   saved = false,
+  notes,
   onSaveToCollection,
+  onImageClick,
   onSave,
   onUnsave,
   className = ""
@@ -35,13 +39,11 @@ export default function ImageCard({
   const [imgLoaded, setImgLoaded] = useState(false);
 
   const handleSaveClick = async () => {
-    // If collection picker is available, use it
     if (onSaveToCollection) {
       onSaveToCollection({ imageUrl, sourceUrl, source, title, description });
       return;
     }
 
-    // Fallback to simple save toggle
     setIsLoading(true);
     try {
       if (isSaved) {
@@ -62,6 +64,12 @@ export default function ImageCard({
   };
 
   const handleCardTap = () => {
+    // If lightbox handler is provided, open lightbox
+    if (onImageClick) {
+      onImageClick();
+      return;
+    }
+    // Fallback: open save modal
     if (onSaveToCollection) {
       onSaveToCollection({ imageUrl, sourceUrl, source, title, description });
     }
@@ -69,7 +77,7 @@ export default function ImageCard({
 
   return (
     <div className={`card group hover:shadow-lg transition-all duration-300 ${className}`}>
-      {/* Image — tap to save */}
+      {/* Image — tap to open lightbox */}
       <div className="relative aspect-auto cursor-pointer" onClick={handleCardTap}>
         {imgError ? (
           <div
@@ -86,7 +94,6 @@ export default function ImageCard({
           </div>
         ) : (
           <>
-            {/* Loading placeholder */}
             {!imgLoaded && !imgError && (
               <div
                 className="w-full flex items-center justify-center animate-pulse"
@@ -119,13 +126,13 @@ export default function ImageCard({
           </>
         )}
 
-        {/* Save button overlay (always visible on mobile, hover on desktop) */}
+        {/* Save button overlay — ALWAYS visible on mobile, hover on desktop */}
         {!imgError && (
           <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
             <button
               onClick={(e) => { e.stopPropagation(); handleSaveClick(); }}
               disabled={isLoading}
-              className={`p-2 rounded-full backdrop-blur-sm shadow-md transition-all duration-200 ${
+              className={`p-2.5 rounded-full backdrop-blur-sm shadow-md transition-all duration-200 min-w-[44px] min-h-[44px] flex items-center justify-center ${
                 isSaved
                   ? 'bg-pink-500 text-white hover:bg-pink-600'
                   : 'bg-white bg-opacity-90 text-gray-800 hover:bg-opacity-100'
@@ -150,6 +157,11 @@ export default function ImageCard({
           <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">
             {title}
           </h3>
+        )}
+        {notes && (
+          <p className="text-gray-500 text-xs mb-1.5 line-clamp-2 italic">
+            📝 {notes}
+          </p>
         )}
         {description && (
           <p className="text-gray-600 text-sm mb-2 line-clamp-3">

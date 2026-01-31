@@ -7,6 +7,8 @@ import SearchBar from '@/components/SearchBar';
 import MasonryGrid from '@/components/MasonryGrid';
 import ImageCard from '@/components/ImageCard';
 import SaveToCollectionModal from '@/components/SaveToCollectionModal';
+import ImageLightbox, { type LightboxImage } from '@/components/ImageLightbox';
+import { useToast } from '@/contexts/ToastContext';
 
 const trendingImages = [
   {
@@ -66,6 +68,7 @@ const trendingImages = [
 ];
 
 export default function Home() {
+  const toast = useToast();
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveModalImage, setSaveModalImage] = useState<{
     imageUrl: string;
@@ -74,6 +77,10 @@ export default function Home() {
     title?: string;
     description?: string;
   } | null>(null);
+
+  // Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const handleSaveToCollection = (imageData: {
     imageUrl: string;
@@ -86,15 +93,34 @@ export default function Home() {
     setSaveModalOpen(true);
   };
 
+  const handleLightboxSave = (img: LightboxImage) => {
+    handleSaveToCollection({
+      imageUrl: img.imageUrl,
+      sourceUrl: img.sourceUrl,
+      source: img.source,
+      title: img.title,
+      description: img.description,
+    });
+  };
+
+  const lightboxImages: LightboxImage[] = trendingImages.map((img) => ({
+    id: img.id,
+    imageUrl: img.imageUrl,
+    title: img.title,
+    source: img.source,
+    sourceUrl: img.sourceUrl,
+    description: img.description,
+  }));
+
   return (
     <div className="pb-20 sm:pb-0" style={{ minHeight: '100vh', background: 'linear-gradient(to bottom, #fdf2f8, white 40%)' }}>
       <Navbar />
-      
+
       {/* Hero — compact, search-first */}
       <div style={{ padding: '2rem 1rem 1.5rem', textAlign: 'center' }}>
         <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
           <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💅✨</div>
-          
+
           <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.75rem)', fontWeight: 700, color: '#111827', marginBottom: '0.5rem', lineHeight: 1.2 }}>
             Find Your Next{' '}
             <span style={{ color: '#ec4899' }}>Nail Look</span>
@@ -102,7 +128,7 @@ export default function Home() {
           <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', color: '#6b7280', marginBottom: '1.5rem', maxWidth: '28rem', marginLeft: 'auto', marginRight: 'auto' }}>
             Search thousands of designs, save your faves, and get inspired
           </p>
-          
+
           <SearchBar size="hero" />
         </div>
       </div>
@@ -113,25 +139,18 @@ export default function Home() {
           <h2 style={{ fontSize: 'clamp(1.125rem, 3vw, 1.5rem)', fontWeight: 700, color: '#111827' }}>
             Trending Now 🔥
           </h2>
-          <Link
-            href="/search"
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              color: '#db2777',
-              textDecoration: 'none',
-            }}
-          >
+          <Link href="/search" style={{ fontSize: '0.875rem', fontWeight: 500, color: '#db2777', textDecoration: 'none' }}>
             View All →
           </Link>
         </div>
 
         <MasonryGrid>
-          {trendingImages.map((image) => (
+          {trendingImages.map((image, idx) => (
             <ImageCard
               key={image.id}
               {...image}
               onSaveToCollection={handleSaveToCollection}
+              onImageClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
             />
           ))}
         </MasonryGrid>
@@ -157,19 +176,10 @@ export default function Home() {
             <Link
               href="/collections"
               style={{
-                backgroundColor: 'white',
-                color: '#db2777',
-                fontWeight: 600,
-                padding: '0.75rem 2rem',
-                borderRadius: '9999px',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.9375rem',
-                minHeight: '48px',
-                width: 'fit-content',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
+                backgroundColor: 'white', color: '#db2777', fontWeight: 600,
+                padding: '0.75rem 2rem', borderRadius: '9999px', border: 'none',
+                cursor: 'pointer', fontSize: '0.9375rem', minHeight: '48px',
+                width: 'fit-content', textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
               }}
             >
               Start Collecting
@@ -177,19 +187,11 @@ export default function Home() {
             <Link
               href="/ideas"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                fontWeight: 600,
-                padding: '0.75rem 2rem',
-                borderRadius: '9999px',
-                border: '1px solid rgba(255,255,255,0.4)',
-                cursor: 'pointer',
-                fontSize: '0.9375rem',
-                minHeight: '48px',
-                width: 'fit-content',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
+                backgroundColor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600,
+                padding: '0.75rem 2rem', borderRadius: '9999px',
+                border: '1px solid rgba(255,255,255,0.4)', cursor: 'pointer',
+                fontSize: '0.9375rem', minHeight: '48px', width: 'fit-content',
+                textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
               }}
             >
               Browse Ideas
@@ -198,11 +200,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Save to Collection Modal */}
       <SaveToCollectionModal
         isOpen={saveModalOpen}
         onClose={() => { setSaveModalOpen(false); setSaveModalImage(null); }}
         imageData={saveModalImage}
+        onSaved={(name) => toast.success(`Saved to ${name} ✨`)}
+      />
+
+      <ImageLightbox
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        onSave={handleLightboxSave}
       />
     </div>
   );

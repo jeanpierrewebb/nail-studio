@@ -128,6 +128,8 @@ function SearchContent() {
     if (isAddToMode) {
       handleQuickSave({ imageUrl: img.imageUrl, sourceUrl: img.sourceUrl, source: img.source, title: img.title, description: img.description });
     } else {
+      // Close lightbox first so save modal appears on top and scroll isn't locked
+      setLightboxOpen(false);
       handleSaveToCollection({ imageUrl: img.imageUrl, sourceUrl: img.sourceUrl, source: img.source, title: img.title, description: img.description });
     }
   };

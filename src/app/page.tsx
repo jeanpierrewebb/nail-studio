@@ -94,6 +94,7 @@ export default function Home() {
   };
 
   const handleLightboxSave = (img: LightboxImage) => {
+    setLightboxOpen(false);
     handleSaveToCollection({
       imageUrl: img.imageUrl,
       sourceUrl: img.sourceUrl,

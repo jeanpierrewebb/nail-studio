@@ -52,6 +52,7 @@ export default function SavesPage() {
   }));
 
   const handleLightboxSave = (img: LightboxImage) => {
+    setLightboxOpen(false);
     setSaveModalImage({
       imageUrl: img.imageUrl, sourceUrl: img.sourceUrl, source: img.source,
       title: img.title, description: img.description,

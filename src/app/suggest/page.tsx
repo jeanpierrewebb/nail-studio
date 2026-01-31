@@ -2,8 +2,19 @@
 
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
+import SaveToCollectionModal from '@/components/SaveToCollectionModal';
+import { useToast } from '@/contexts/ToastContext';
+
+interface SuggestionResult {
+  id: string;
+  imageUrl: string;
+  title: string;
+  source: string;
+  sourceUrl: string;
+}
 
 export default function SuggestPage() {
+  const toast = useToast();
   const [preferences, setPreferences] = useState({
     occasion: '',
     style: '',
@@ -11,8 +22,18 @@ export default function SuggestPage() {
     length: '',
     maintenance: '',
   });
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Save modal
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveModalImage, setSaveModalImage] = useState<{
+    imageUrl: string;
+    sourceUrl: string;
+    source: string;
+    title?: string;
+  } | null>(null);
 
   const occasions = ['Everyday', 'Work/Professional', 'Wedding', 'Party', 'Date Night', 'Vacation'];
   const styles = ['Classic', 'Modern', 'Artistic', 'Minimalist', 'Bold', 'Cute'];
@@ -21,78 +42,85 @@ export default function SuggestPage() {
   const maintenanceLevels = ['Low (easy to maintain)', 'Medium (some upkeep)', 'High (frequent touch-ups)'];
 
   const handleColorToggle = (color: string) => {
-    setPreferences(prev => ({
+    setPreferences((prev) => ({
       ...prev,
-      colors: prev.colors.includes(color)
-        ? prev.colors.filter(c => c !== color)
-        : [...prev.colors, color]
+      colors: prev.colors.includes(color) ? prev.colors.filter((c) => c !== color) : [...prev.colors, color],
     }));
+  };
+
+  const buildQuery = () => {
+    const parts: string[] = [];
+    if (preferences.style) parts.push(preferences.style);
+    if (preferences.colors.length > 0) parts.push(preferences.colors.join(' '));
+    if (preferences.occasion) parts.push(preferences.occasion);
+    if (preferences.length) parts.push(preferences.length + ' nails');
+    // always add "nail art" at the end for relevance
+    return parts.length > 0 ? parts.join(' ') + ' nail art' : 'trendy nail art';
   };
 
   const getSuggestions = async () => {
     setLoading(true);
-    
-    // Simulate AI processing
-    setTimeout(() => {
-      // Mock suggestions based on preferences
-      const mockSuggestions = [
-        {
-          id: 1,
-          title: 'Classic French Tips',
-          description: 'Perfect for your professional setting with a timeless appeal',
-          imageUrl: 'https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?w=300&h=400&fit=crop',
-          matchScore: 95,
-          reasons: ['Professional appearance', 'Low maintenance', 'Timeless style']
-        },
-        {
-          id: 2,
-          title: 'Soft Pink Ombre',
-          description: 'Elegant gradient that works for any occasion',
-          imageUrl: 'https://images.unsplash.com/photo-1727199433231-346fd8101839?w=300&h=400&fit=crop',
-          matchScore: 88,
-          reasons: ['Versatile for work and play', 'Matches your color preference', 'Medium maintenance']
-        },
-        {
-          id: 3,
-          title: 'Red & Gold Glam',
-          description: 'Stunning red and gold manicure for special events',
-          imageUrl: 'https://images.unsplash.com/photo-1586973762963-9c610b87803d?w=300&h=400&fit=crop',
-          matchScore: 82,
-          reasons: ['Eye-catching design', 'Perfect for events', 'Suits any outfit']
-        }
-      ];
-      
-      setSuggestions(mockSuggestions);
-      setLoading(false);
-    }, 2000);
+    setError(null);
+
+    const query = buildQuery();
+
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&count=12`);
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: 'Search failed' }));
+        throw new Error(data.error || 'Search failed');
+      }
+
+      const data = await response.json();
+      const results: SuggestionResult[] = (data.results || []).map((r: any) => ({
+        id: r.id,
+        imageUrl: r.imageUrl,
+        title: r.title,
+        source: r.source,
+        sourceUrl: r.sourceUrl,
+      }));
+
+      setSuggestions(results);
+
+      if (results.length === 0) {
+        toast.info('No results found — try different preferences');
+      }
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to get suggestions';
+      setError(msg);
+      toast.error(msg);
+    }
+
+    setLoading(false);
+  };
+
+  const handleSaveClick = (s: SuggestionResult) => {
+    setSaveModalImage({
+      imageUrl: s.imageUrl,
+      sourceUrl: s.sourceUrl,
+      source: s.source,
+      title: s.title,
+    });
+    setSaveModalOpen(true);
   };
 
   const resetPreferences = () => {
-    setPreferences({
-      occasion: '',
-      style: '',
-      colors: [],
-      length: '',
-      maintenance: '',
-    });
+    setPreferences({ occasion: '', style: '', colors: [], length: '', maintenance: '' });
     setSuggestions([]);
+    setError(null);
   };
 
   return (
-    <div className="min-h-screen pb-20 sm:pb-0" 
-         style={{ 
-           background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' 
-         }}>
+    <div className="min-h-screen pb-20 sm:pb-0" style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' }}>
       <Navbar />
-      
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Help Me Decide 🤔
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Help Me Decide 🤔</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Can't decide on your next nail design? Tell us your preferences and we'll suggest the perfect nail art for you!
+            Can&apos;t decide on your next nail design? Tell us your preferences and we&apos;ll suggest the perfect nail art for you!
           </p>
         </div>
 
@@ -100,17 +128,15 @@ export default function SuggestPage() {
           {/* Preferences Form */}
           <div className="card p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Tell us about yourself</h2>
-            
+
             {/* Occasion */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                What's the occasion?
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">What&apos;s the occasion?</label>
               <div className="grid grid-cols-2 gap-2">
                 {occasions.map((occasion) => (
                   <button
                     key={occasion}
-                    onClick={() => setPreferences(prev => ({ ...prev, occasion }))}
+                    onClick={() => setPreferences((prev) => ({ ...prev, occasion }))}
                     className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
                       preferences.occasion === occasion
                         ? 'bg-pink-500 text-white border-pink-500'
@@ -125,14 +151,12 @@ export default function SuggestPage() {
 
             {/* Style */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                What's your style?
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">What&apos;s your style?</label>
               <div className="grid grid-cols-3 gap-2">
                 {styles.map((style) => (
                   <button
                     key={style}
-                    onClick={() => setPreferences(prev => ({ ...prev, style }))}
+                    onClick={() => setPreferences((prev) => ({ ...prev, style }))}
                     className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
                       preferences.style === style
                         ? 'bg-pink-500 text-white border-pink-500'
@@ -147,9 +171,7 @@ export default function SuggestPage() {
 
             {/* Colors */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Favorite colors? (select multiple)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Favorite colors? (select multiple)</label>
               <div className="grid grid-cols-4 gap-2">
                 {colorOptions.map((color) => (
                   <button
@@ -169,14 +191,12 @@ export default function SuggestPage() {
 
             {/* Length */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Preferred nail length?
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">Preferred nail length?</label>
               <div className="grid grid-cols-3 gap-2">
                 {lengths.map((length) => (
                   <button
                     key={length}
-                    onClick={() => setPreferences(prev => ({ ...prev, length }))}
+                    onClick={() => setPreferences((prev) => ({ ...prev, length }))}
                     className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
                       preferences.length === length
                         ? 'bg-pink-500 text-white border-pink-500'
@@ -191,14 +211,12 @@ export default function SuggestPage() {
 
             {/* Maintenance */}
             <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                How much maintenance are you okay with?
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-3">How much maintenance are you okay with?</label>
               <div className="space-y-2">
                 {maintenanceLevels.map((level) => (
                   <button
                     key={level}
-                    onClick={() => setPreferences(prev => ({ ...prev, maintenance: level }))}
+                    onClick={() => setPreferences((prev) => ({ ...prev, maintenance: level }))}
                     className={`w-full p-3 rounded-lg border text-sm font-medium transition-colors text-left ${
                       preferences.maintenance === level
                         ? 'bg-pink-500 text-white border-pink-500'
@@ -227,10 +245,7 @@ export default function SuggestPage() {
                   'Get My Suggestions ✨'
                 )}
               </button>
-              <button
-                onClick={resetPreferences}
-                className="btn-secondary"
-              >
+              <button onClick={resetPreferences} className="btn-secondary">
                 Reset
               </button>
             </div>
@@ -238,53 +253,38 @@ export default function SuggestPage() {
 
           {/* Results */}
           <div>
+            {error && (
+              <div className="card p-6 mb-4 bg-red-50 border-red-200">
+                <p className="text-red-600 text-sm">{error}</p>
+                <button onClick={getSuggestions} className="btn-primary text-sm mt-3 py-2 px-4">
+                  Try Again
+                </button>
+              </div>
+            )}
+
             {suggestions.length > 0 && (
               <div className="card p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  Perfect matches for you! 💅
-                </h2>
-                
-                <div className="space-y-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Perfect matches for you! 💅</h2>
+
+                <div className="space-y-4">
                   {suggestions.map((suggestion) => (
-                    <div key={suggestion.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex space-x-4">
+                    <div key={suggestion.id} className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-shadow">
+                      <div className="flex space-x-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={suggestion.imageUrl}
                           alt={suggestion.title}
-                          className="w-20 h-24 object-cover rounded-lg"
+                          className="w-20 h-24 object-cover rounded-lg flex-shrink-0"
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
                         />
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-semibold text-gray-900">
-                              {suggestion.title}
-                            </h3>
-                            <div className="flex items-center">
-                              <span className="text-pink-600 font-bold text-lg">
-                                {suggestion.matchScore}%
-                              </span>
-                              <span className="text-gray-500 text-sm ml-1">match</span>
-                            </div>
-                          </div>
-                          
-                          <p className="text-gray-600 text-sm mb-3">
-                            {suggestion.description}
-                          </p>
-                          
-                          <div className="mb-3">
-                            <p className="text-xs font-medium text-gray-700 mb-1">Why it's perfect for you:</p>
-                            <div className="flex flex-wrap gap-1">
-                              {suggestion.reasons.map((reason: string, index: number) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"
-                                >
-                                  ✓ {reason}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <button className="text-pink-600 hover:text-pink-700 text-sm font-medium">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">{suggestion.title}</h3>
+                          <p className="text-gray-500 text-xs mb-2">{suggestion.source}</p>
+                          <button
+                            onClick={() => handleSaveClick(suggestion)}
+                            className="text-pink-600 hover:text-pink-700 text-sm font-medium"
+                          >
                             Save this idea →
                           </button>
                         </div>
@@ -296,20 +296,29 @@ export default function SuggestPage() {
             )}
 
             {/* Empty State */}
-            {suggestions.length === 0 && !loading && (
+            {suggestions.length === 0 && !loading && !error && (
               <div className="card p-8 text-center">
                 <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Ready when you are!
-                </h3>
-                <p className="text-gray-600">
-                  Fill out your preferences on the left and we'll find the perfect nail designs for you.
-                </p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready when you are!</h3>
+                <p className="text-gray-600">Fill out your preferences on the left and we&apos;ll find the perfect nail designs for you.</p>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        isOpen={saveModalOpen}
+        onClose={() => {
+          setSaveModalOpen(false);
+          setSaveModalImage(null);
+        }}
+        imageData={saveModalImage}
+        onSaved={(name) => {
+          toast.success(`Saved to ${name} ✨`);
+        }}
+      />
     </div>
   );
 }

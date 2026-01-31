@@ -7,6 +7,7 @@ import SearchBar from '@/components/SearchBar';
 import MasonryGrid from '@/components/MasonryGrid';
 import ImageCard from '@/components/ImageCard';
 import SaveToCollectionModal from '@/components/SaveToCollectionModal';
+import { useToast } from '@/contexts/ToastContext';
 import {
   getCollection,
   saveImageToCollection,
@@ -26,6 +27,7 @@ interface SearchResult {
 function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const globalToast = useToast();
   const query = searchParams.get('q') || '';
   const addToId = searchParams.get('addTo') || '';
 
@@ -83,13 +85,27 @@ function SearchContent() {
       );
 
       if (!response.ok) {
-        throw new Error('Search failed');
+        const data = await response.json().catch(() => ({ error: 'Search failed' }));
+        const msg = data.error || 'Search failed';
+        setError(msg);
+
+        if (data.errorCode === 'RATE_LIMIT') {
+          globalToast.error('Too many searches — wait a sec and try again 🙏');
+        } else if (data.errorCode === 'AUTH_FAILED') {
+          globalToast.error('Search API key issue — let the admin know');
+        } else {
+          globalToast.error(msg);
+        }
+        setLoading(false);
+        return;
       }
 
       const data = await response.json();
       setResults(data.results || []);
     } catch (err) {
-      setError('Failed to search for images. Please try again.');
+      const msg = 'Network error — check your connection and try again';
+      setError(msg);
+      globalToast.error(msg);
       console.error('Search error:', err);
     }
 

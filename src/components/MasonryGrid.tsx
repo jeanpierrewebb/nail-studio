@@ -11,7 +11,7 @@ interface MasonryGridProps {
 export default function MasonryGrid({ 
   children, 
   className = "",
-  gap = 12
+  gap = 16
 }: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [columns, setColumns] = useState(2);

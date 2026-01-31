@@ -184,17 +184,17 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
     <div className="min-h-screen pb-20 sm:pb-0" style={{ background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' }}>
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6">
         {/* Back button */}
-        <button onClick={() => router.push('/collections')} className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">
-          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button onClick={() => router.push('/collections')} className="flex items-center text-gray-400 hover:text-gray-600 mb-4 transition-colors text-sm">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Collections
+          Collections
         </button>
 
         {/* Header */}
-        <div className="flex items-start justify-between mb-8">
+        <div className="flex items-start justify-between mb-5">
           {editing ? (
             <form onSubmit={handleUpdate} className="flex-1 max-w-lg">
               <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="input-field text-2xl font-bold mb-2" required />
@@ -241,18 +241,18 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* Add Images Bar */}
-        <div className="flex flex-wrap items-center gap-3 mb-6">
-          <button onClick={() => router.push(`/search?addTo=${id}`)} className="btn-primary text-sm py-2 px-4">
-            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          <button onClick={() => router.push(`/search?addTo=${id}`)} className="inline-flex items-center text-xs font-semibold py-2 px-3.5 rounded-full bg-pink-50 text-pink-600 border border-pink-200 hover:bg-pink-100 transition-colors">
+            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             Search & Add
           </button>
-          <button onClick={() => setShowAddUrl(!showAddUrl)} className="btn-secondary text-sm py-2 px-4">
-            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button onClick={() => setShowAddUrl(!showAddUrl)} className="inline-flex items-center text-xs font-semibold py-2 px-3.5 rounded-full bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 transition-colors">
+            <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
             </svg>
-            Paste Image URL
+            Paste URL
           </button>
         </div>
 
@@ -278,7 +278,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
         {collection.inspirationImages.length > 0 ? (
           <MasonryGrid>
             {collection.inspirationImages.map((image, idx) => (
-              <div key={image.id} className="relative group/item">
+              <div key={image.id} className="group/item">
                 <ImageCard
                   id={image.id}
                   imageUrl={image.imageUrl}
@@ -290,15 +290,13 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
                   notes={image.notes}
                   onImageClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
                 />
-                {/* Remove from collection button — always visible on mobile */}
+                {/* Remove — subtle text link below card */}
                 <button
                   onClick={() => handleRemoveImage(image.id)}
-                  className="absolute top-2 left-2 p-2 bg-red-500 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity duration-200 hover:bg-red-600 min-w-[36px] min-h-[36px] flex items-center justify-center"
+                  className="w-full mt-1.5 py-1 text-[11px] text-gray-300 hover:text-red-500 active:text-red-500 transition-colors text-center"
                   title="Remove from collection"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  Remove
                 </button>
               </div>
             ))}

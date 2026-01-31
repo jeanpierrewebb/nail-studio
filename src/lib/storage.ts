@@ -21,8 +21,18 @@ export interface StoredImage {
   collectionIds: string[]; // image can be in multiple collections
 }
 
+export interface StoredIdea {
+  id: string;
+  title: string;
+  description: string;
+  tags: string; // JSON-stringified array
+  createdAt: string;
+  updatedAt: string;
+}
+
 const COLLECTIONS_KEY = 'nail-studio-collections';
 const IMAGES_KEY = 'nail-studio-saved-images';
+const IDEAS_KEY = 'nail-studio-ideas';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -182,4 +192,54 @@ export function getCollectionsWithCounts() {
       _count: { inspirationImages: collectionImages.length },
     };
   });
+}
+
+// ---- Ideas ----
+
+export function getIdeas(): StoredIdea[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(IDEAS_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function createIdea(title: string, description?: string, tags?: string): StoredIdea {
+  const ideas = getIdeas();
+  const now = new Date().toISOString();
+  const idea: StoredIdea = {
+    id: generateId(),
+    title: title.trim(),
+    description: description?.trim() || '',
+    tags: tags || '[]',
+    createdAt: now,
+    updatedAt: now,
+  };
+  ideas.unshift(idea);
+  localStorage.setItem(IDEAS_KEY, JSON.stringify(ideas));
+  return idea;
+}
+
+export function updateIdea(id: string, updates: Partial<Pick<StoredIdea, 'title' | 'description' | 'tags'>>): StoredIdea | null {
+  const ideas = getIdeas();
+  const idx = ideas.findIndex(i => i.id === id);
+  if (idx === -1) return null;
+
+  ideas[idx] = {
+    ...ideas[idx],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(IDEAS_KEY, JSON.stringify(ideas));
+  return ideas[idx];
+}
+
+export function deleteIdea(id: string): boolean {
+  const ideas = getIdeas();
+  const filtered = ideas.filter(i => i.id !== id);
+  if (filtered.length === ideas.length) return false;
+  localStorage.setItem(IDEAS_KEY, JSON.stringify(filtered));
+  return true;
 }

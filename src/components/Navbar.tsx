@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 
 const navLinks = [
   { href: '/', label: 'Home', emoji: '🏠' },
@@ -14,8 +13,6 @@ const navLinks = [
 
 export default function Navbar() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
   const isActive = (path: string) => pathname === path;
 
   return (
@@ -56,16 +53,7 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Mobile hamburger - hidden on sm+ */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="sm:hidden"
-              style={{ padding: '0.5rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              <svg style={{ width: '1.5rem', height: '1.5rem' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+            {/* Mobile nav is handled by bottom tab bar */}
           </div>
         </div>
       </nav>
@@ -106,6 +94,7 @@ export default function Navbar() {
           ))}
         </div>
       </div>
+
     </>
   );
 }

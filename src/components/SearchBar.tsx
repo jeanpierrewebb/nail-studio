@@ -125,15 +125,17 @@ export default function SearchBar({
               }
             }}
             style={{
-              fontSize: '0.8125rem',
-              padding: '0.375rem 0.75rem',
+              fontSize: '0.875rem',
+              padding: '0.5rem 1rem',
               backgroundColor: '#fdf2f8',
               color: '#db2777',
               borderRadius: '9999px',
               border: 'none',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
-              minHeight: '32px',
+              minHeight: '44px',
+              display: 'inline-flex',
+              alignItems: 'center',
             }}
           >
             {term}

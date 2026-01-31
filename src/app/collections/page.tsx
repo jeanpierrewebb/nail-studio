@@ -3,65 +3,39 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import { getCollectionsWithCounts, createCollection, type StoredCollection } from '@/lib/storage';
 
-interface Collection {
-  id: string;
-  name: string;
-  description: string;
-  coverImageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-  inspirationImages: Array<{
-    id: string;
-    imageUrl: string;
-  }>;
-  _count: {
-    inspirationImages: number;
-  };
+interface CollectionWithImages extends StoredCollection {
+  inspirationImages: Array<{ id: string; imageUrl: string }>;
+  _count: { inspirationImages: number };
 }
 
 export default function CollectionsPage() {
-  const [collections, setCollections] = useState<Collection[]>([]);
+  const [collections, setCollections] = useState<CollectionWithImages[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [newCollectionDescription, setNewCollectionDescription] = useState('');
 
-  const fetchCollections = async () => {
-    try {
-      const response = await fetch('/api/collections');
-      const data = await response.json();
-      setCollections(data.collections || []);
-    } catch (error) {
-      console.error('Error fetching collections:', error);
-    }
+  const fetchCollections = () => {
+    const data = getCollectionsWithCounts();
+    setCollections(data as CollectionWithImages[]);
     setLoading(false);
   };
 
-  const createCollection = async (e: React.FormEvent) => {
+  const handleCreateCollection = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCollectionName.trim()) return;
 
-    try {
-      const response = await fetch('/api/collections', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newCollectionName,
-          description: newCollectionDescription,
-        }),
-      });
-
-      if (response.ok) {
-        const newCollection = await response.json();
-        setCollections(prev => [newCollection, ...prev]);
-        setNewCollectionName('');
-        setNewCollectionDescription('');
-        setShowCreateModal(false);
-      }
-    } catch (error) {
-      console.error('Error creating collection:', error);
-    }
+    const newCollection = createCollection(newCollectionName, newCollectionDescription);
+    setCollections(prev => [{
+      ...newCollection,
+      inspirationImages: [],
+      _count: { inspirationImages: 0 },
+    }, ...prev]);
+    setNewCollectionName('');
+    setNewCollectionDescription('');
+    setShowCreateModal(false);
   };
 
   useEffect(() => {
@@ -70,7 +44,7 @@ export default function CollectionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white pb-20 sm:pb-0">
         <Navbar />
         <div className="flex items-center justify-center py-16">
           <div className="w-16 h-16 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
@@ -80,7 +54,7 @@ export default function CollectionsPage() {
   }
 
   return (
-    <div className="min-h-screen" 
+    <div className="min-h-screen pb-20 sm:pb-0" 
          style={{ 
            background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' 
          }}>
@@ -114,12 +88,14 @@ export default function CollectionsPage() {
                   <div className="aspect-square bg-gradient-to-br from-pink-100 to-pink-200 relative overflow-hidden">
                     {collection.inspirationImages.length > 0 ? (
                       <div className="grid grid-cols-2 h-full">
-                        {collection.inspirationImages.slice(0, 4).map((image, index) => (
+                        {collection.inspirationImages.slice(0, 4).map((image) => (
                           <div key={image.id} className="relative">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={image.imageUrl}
                               alt=""
                               className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
                             />
                           </div>
                         ))}
@@ -145,7 +121,7 @@ export default function CollectionsPage() {
                       </p>
                     )}
                     <p className="text-pink-600 text-sm font-medium">
-                      {collection._count.inspirationImages} items
+                      {collection._count.inspirationImages} {collection._count.inspirationImages === 1 ? 'item' : 'items'}
                     </p>
                   </div>
                 </div>
@@ -174,10 +150,10 @@ export default function CollectionsPage() {
       {/* Create Collection Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 animate-slide-up">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Create New Collection</h2>
             
-            <form onSubmit={createCollection}>
+            <form onSubmit={handleCreateCollection}>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Collection Name
@@ -188,6 +164,7 @@ export default function CollectionsPage() {
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="e.g., Summer Vibes, Wedding Nails"
                   className="input-field"
+                  autoFocus
                   required
                 />
               </div>

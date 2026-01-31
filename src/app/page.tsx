@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import MasonryGrid from '@/components/MasonryGrid';
 import ImageCard from '@/components/ImageCard';
+import SaveToCollectionModal from '@/components/SaveToCollectionModal';
 
 const trendingImages = [
   {
@@ -64,16 +66,28 @@ const trendingImages = [
 ];
 
 export default function Home() {
-  const handleSave = async (id: string) => {
-    console.log('Saving image:', id);
-  };
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveModalImage, setSaveModalImage] = useState<{
+    imageUrl: string;
+    sourceUrl: string;
+    source: string;
+    title?: string;
+    description?: string;
+  } | null>(null);
 
-  const handleUnsave = async (id: string) => {
-    console.log('Unsaving image:', id);
+  const handleSaveToCollection = (imageData: {
+    imageUrl: string;
+    sourceUrl: string;
+    source: string;
+    title?: string;
+    description?: string;
+  }) => {
+    setSaveModalImage(imageData);
+    setSaveModalOpen(true);
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom, #fdf2f8, white 40%)' }}>
+    <div className="pb-20 sm:pb-0" style={{ minHeight: '100vh', background: 'linear-gradient(to bottom, #fdf2f8, white 40%)' }}>
       <Navbar />
       
       {/* Hero — compact, search-first */}
@@ -117,8 +131,7 @@ export default function Home() {
             <ImageCard
               key={image.id}
               {...image}
-              onSave={handleSave}
-              onUnsave={handleUnsave}
+              onSaveToCollection={handleSaveToCollection}
             />
           ))}
         </MasonryGrid>
@@ -184,6 +197,13 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        isOpen={saveModalOpen}
+        onClose={() => { setSaveModalOpen(false); setSaveModalImage(null); }}
+        imageData={saveModalImage}
+      />
     </div>
   );
 }

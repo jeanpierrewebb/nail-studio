@@ -46,18 +46,26 @@ export async function GET(request: NextRequest) {
     const data = await response.json();
 
     // Transform the Brave Image Search response to our format
-    // Brave returns: results[].properties.url (full image), results[].thumbnail.src, results[].title, results[].url (page), results[].source
-    const transformedResults = data.results?.map((result: any, index: number) => ({
-      id: `search-${Date.now()}-${index}`,
-      imageUrl: result.properties?.url || result.thumbnail?.src || '',
-      title: result.title || 'Nail Art Inspiration',
-      description: '',
-      source: result.source || 'Web',
-      sourceUrl: result.url || '',
-      saved: false,
-      width: result.properties?.width,
-      height: result.properties?.height,
-    })).filter((r: any) => r.imageUrl) || [];
+    // Brave returns: results[].properties.url (full image), results[].thumbnail.src (proxied thumbnail), results[].title, results[].url (page), results[].source
+    // IMPORTANT: Use thumbnail.src as primary display URL — it's proxied through Brave's CDN
+    // and reliably loads. Direct hotlinks (properties.url) are often blocked by origin sites.
+    const transformedResults = data.results?.map((result: any, index: number) => {
+      const thumbnailUrl = result.thumbnail?.src || '';
+      const fullUrl = result.properties?.url || '';
+      
+      return {
+        id: `search-${Date.now()}-${index}`,
+        imageUrl: thumbnailUrl || fullUrl,
+        fullImageUrl: fullUrl,
+        title: result.title || 'Nail Art Inspiration',
+        description: '',
+        source: result.source || 'Web',
+        sourceUrl: result.url || '',
+        saved: false,
+        width: result.thumbnail?.width || result.properties?.width,
+        height: result.thumbnail?.height || result.properties?.height,
+      };
+    }).filter((r: any) => r.imageUrl) || [];
 
     return NextResponse.json({
       results: transformedResults,

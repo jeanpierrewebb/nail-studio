@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Always use a file URL for Prisma config (migrations/introspection)
+    // Actual runtime connection goes through the libsql adapter
+    url: process.env["DATABASE_URL"] || "file:./prisma/dev.db",
   },
 });

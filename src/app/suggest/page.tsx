@@ -79,7 +79,7 @@ export default function SuggestPage() {
   };
 
   return (
-    <div className="min-h-screen" 
+    <div className="min-h-screen pb-20 sm:pb-0" 
          style={{ 
            background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' 
          }}>

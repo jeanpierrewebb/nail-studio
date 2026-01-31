@@ -81,7 +81,7 @@ export default function IdeasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white pb-20 sm:pb-0">
         <Navbar />
         <div className="flex items-center justify-center py-16">
           <div className="w-16 h-16 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
@@ -91,7 +91,7 @@ export default function IdeasPage() {
   }
 
   return (
-    <div className="min-h-screen" 
+    <div className="min-h-screen pb-20 sm:pb-0" 
          style={{ 
            background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' 
          }}>

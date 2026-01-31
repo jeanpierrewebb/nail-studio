@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import SearchBar from '@/components/SearchBar';
 import MasonryGrid from '@/components/MasonryGrid';
 import ImageCard from '@/components/ImageCard';
+import SaveToCollectionModal from '@/components/SaveToCollectionModal';
 
 interface SearchResult {
   id: string;
@@ -25,6 +26,14 @@ function SearchContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveModalImage, setSaveModalImage] = useState<{
+    imageUrl: string;
+    sourceUrl: string;
+    source: string;
+    title?: string;
+    description?: string;
+  } | null>(null);
 
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -55,47 +64,15 @@ function SearchContent() {
     router.push(`/search?q=${encodeURIComponent(newQuery)}`);
   };
 
-  const handleSave = async (imageId: string) => {
-    try {
-      const image = results.find(r => r.id === imageId);
-      if (!image) return;
-
-      const response = await fetch('/api/images/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageUrl: image.imageUrl,
-          sourceUrl: image.sourceUrl,
-          source: image.source,
-          title: image.title,
-          description: image.description,
-        }),
-      });
-
-      if (response.ok) {
-        setResults(prev => prev.map(r => 
-          r.id === imageId ? { ...r, saved: true } : r
-        ));
-      }
-    } catch (error) {
-      console.error('Error saving image:', error);
-    }
-  };
-
-  const handleUnsave = async (imageId: string) => {
-    try {
-      const response = await fetch(`/api/images/save?id=${imageId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setResults(prev => prev.map(r => 
-          r.id === imageId ? { ...r, saved: false } : r
-        ));
-      }
-    } catch (error) {
-      console.error('Error unsaving image:', error);
-    }
+  const handleSaveToCollection = (imageData: {
+    imageUrl: string;
+    sourceUrl: string;
+    source: string;
+    title?: string;
+    description?: string;
+  }) => {
+    setSaveModalImage(imageData);
+    setSaveModalOpen(true);
   };
 
   useEffect(() => {
@@ -105,7 +82,7 @@ function SearchContent() {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white"
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-white pb-20 sm:pb-0"
          style={{ 
            background: 'linear-gradient(135deg, #fdf2f8 0%, white 100%)' 
          }}>
@@ -151,17 +128,10 @@ function SearchContent() {
         {/* Results */}
         {!loading && !error && results.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="mb-6">
               <p className="text-gray-600">
                 Found {results.length} results
               </p>
-              <div className="flex items-center space-x-4">
-                <select className="input-field text-sm">
-                  <option>Most Relevant</option>
-                  <option>Newest</option>
-                  <option>Most Popular</option>
-                </select>
-              </div>
             </div>
 
             <MasonryGrid>
@@ -169,8 +139,7 @@ function SearchContent() {
                 <ImageCard
                   key={result.id}
                   {...result}
-                  onSave={handleSave}
-                  onUnsave={handleUnsave}
+                  onSaveToCollection={handleSaveToCollection}
                 />
               ))}
             </MasonryGrid>
@@ -209,6 +178,16 @@ function SearchContent() {
           </div>
         )}
       </div>
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        isOpen={saveModalOpen}
+        onClose={() => { setSaveModalOpen(false); setSaveModalImage(null); }}
+        imageData={saveModalImage}
+        onSaved={(name) => {
+          // Could show a toast or update UI
+        }}
+      />
     </div>
   );
 }

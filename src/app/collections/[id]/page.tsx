@@ -230,7 +230,7 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
         {/* Add Images Bar */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
           <button
-            onClick={() => router.push('/search')}
+            onClick={() => router.push(`/search?addTo=${id}`)}
             className="btn-primary text-sm py-2 px-4"
           >
             <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

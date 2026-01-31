@@ -2,18 +2,35 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { getSavedImages } from '@/lib/storage';
 
 const navLinks = [
   { href: '/', label: 'Home', emoji: '🏠' },
   { href: '/search', label: 'Search', emoji: '🔍' },
-  { href: '/ideas', label: 'Ideas', emoji: '💡' },
   { href: '/collections', label: 'Collections', emoji: '📁' },
+  { href: '/saves', label: 'My Saves', emoji: '💝' },
+  { href: '/ideas', label: 'Ideas', emoji: '💡' },
   { href: '/suggest', label: 'Suggest', emoji: '✨' },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
+  const [saveCount, setSaveCount] = useState(0);
+
+  useEffect(() => {
+    setSaveCount(getSavedImages().length);
+
+    // Re-check on storage events (other tabs) and on focus
+    const update = () => setSaveCount(getSavedImages().length);
+    window.addEventListener('storage', update);
+    window.addEventListener('focus', update);
+    return () => {
+      window.removeEventListener('storage', update);
+      window.removeEventListener('focus', update);
+    };
+  }, []);
 
   return (
     <>
@@ -46,14 +63,33 @@ export default function Navbar() {
                     transition: 'all 0.2s',
                     backgroundColor: isActive(link.href) ? '#fce7f3' : 'transparent',
                     color: isActive(link.href) ? '#be185d' : '#6b7280',
+                    position: 'relative',
                   }}
                 >
                   {link.label}
+                  {link.href === '/saves' && saveCount > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: '0',
+                      right: '-2px',
+                      backgroundColor: '#ec4899',
+                      color: 'white',
+                      fontSize: '0.625rem',
+                      fontWeight: 700,
+                      minWidth: '18px',
+                      height: '18px',
+                      borderRadius: '9999px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0 4px',
+                    }}>
+                      {saveCount > 99 ? '99+' : saveCount}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>
-
-            {/* Mobile nav is handled by bottom tab bar */}
           </div>
         </div>
       </nav>
@@ -80,21 +116,41 @@ export default function Navbar() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                minWidth: '3rem',
+                minWidth: '2.75rem',
                 minHeight: '3rem',
                 textDecoration: 'none',
                 color: isActive(link.href) ? '#db2777' : '#9ca3af',
-                fontSize: '0.625rem',
+                fontSize: '0.5625rem',
                 fontWeight: isActive(link.href) ? 600 : 400,
+                position: 'relative',
               }}
             >
-              <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{link.emoji}</span>
+              <span style={{ fontSize: '1.125rem', lineHeight: 1 }}>{link.emoji}</span>
               <span style={{ marginTop: '2px' }}>{link.label}</span>
+              {link.href === '/saves' && saveCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '0',
+                  right: '-2px',
+                  backgroundColor: '#ec4899',
+                  color: 'white',
+                  fontSize: '0.5rem',
+                  fontWeight: 700,
+                  minWidth: '14px',
+                  height: '14px',
+                  borderRadius: '9999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 3px',
+                }}>
+                  {saveCount > 99 ? '99+' : saveCount}
+                </span>
+              )}
             </Link>
           ))}
         </div>
       </div>
-
     </>
   );
 }

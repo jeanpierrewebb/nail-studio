@@ -1,96 +1,109 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { getTurso, generateId } from '@/lib/turso'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { imageUrl, sourceUrl, source, title, description, collectionId, ideaId } = body;
+    const { 
+      imageUrl, 
+      sourceUrl, 
+      title, 
+      description, 
+      source, 
+      collectionId,
+      ideaId,
+      saved = true 
+    } = await request.json()
 
-    if (!imageUrl || !sourceUrl) {
+    if (!imageUrl) {
       return NextResponse.json(
-        { error: 'imageUrl and sourceUrl are required' },
+        { error: 'Image URL is required' },
         { status: 400 }
-      );
+      )
     }
 
-    // Check if image already exists (by imageUrl)
-    const existing = await prisma.inspirationImage.findFirst({
-      where: { imageUrl },
-    });
+    const turso = getTurso()
 
-    if (existing) {
-      // Update it to saved
-      const updated = await prisma.inspirationImage.update({
-        where: { id: existing.id },
-        data: { saved: true },
-      });
-      return NextResponse.json(updated);
-    }
+    // Check if image already exists
+    const existing = await turso.execute({
+      sql: 'SELECT * FROM NailInspirationImage WHERE imageUrl = ?',
+      args: [imageUrl]
+    })
 
-    // Create new saved image
-    const image = await prisma.inspirationImage.create({
-      data: {
+    let image
+
+    if (existing.rows.length > 0) {
+      // Update existing image
+      const updates: string[] = []
+      const args: (string | number | null)[] = []
+
+      if (collectionId !== undefined) {
+        updates.push('collectionId = ?')
+        args.push(collectionId)
+      }
+      if (ideaId !== undefined) {
+        updates.push('ideaId = ?')
+        args.push(ideaId)
+      }
+      updates.push('saved = ?')
+      args.push(saved ? 1 : 0)
+      
+      args.push(imageUrl) // WHERE clause
+
+      if (updates.length > 0) {
+        await turso.execute({
+          sql: `UPDATE NailInspirationImage SET ${updates.join(', ')} WHERE imageUrl = ?`,
+          args
+        })
+      }
+
+      const result = await turso.execute({
+        sql: 'SELECT * FROM NailInspirationImage WHERE imageUrl = ?',
+        args: [imageUrl]
+      })
+      image = result.rows[0]
+    } else {
+      // Create new image
+      const id = generateId()
+      const now = new Date().toISOString()
+
+      await turso.execute({
+        sql: `INSERT INTO NailInspirationImage 
+              (id, imageUrl, sourceUrl, title, description, source, collectionId, ideaId, saved, createdAt) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          id,
+          imageUrl,
+          sourceUrl || imageUrl,
+          title || null,
+          description || null,
+          source || 'unknown',
+          collectionId || null,
+          ideaId || null,
+          saved ? 1 : 0,
+          now
+        ]
+      })
+
+      image = {
+        id,
         imageUrl,
-        sourceUrl,
-        source: source || 'Web',
+        sourceUrl: sourceUrl || imageUrl,
         title: title || null,
         description: description || null,
-        saved: true,
+        source: source || 'unknown',
         collectionId: collectionId || null,
         ideaId: ideaId || null,
-      },
-    });
+        saved: saved ? 1 : 0,
+        createdAt: now
+      }
+    }
 
-    return NextResponse.json(image, { status: 201 });
+    return NextResponse.json(image, { status: 201 })
   } catch (error) {
-    console.error('Error saving image:', error);
+    console.error('Failed to save image:', error)
     return NextResponse.json(
       { error: 'Failed to save image' },
       { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const id = searchParams.get('id');
-    const imageUrl = searchParams.get('imageUrl');
-
-    if (!id && !imageUrl) {
-      return NextResponse.json(
-        { error: 'id or imageUrl is required' },
-        { status: 400 }
-      );
-    }
-
-    if (id) {
-      const updated = await prisma.inspirationImage.update({
-        where: { id },
-        data: { saved: false },
-      });
-      return NextResponse.json(updated);
-    }
-
-    // Find by imageUrl
-    const existing = await prisma.inspirationImage.findFirst({
-      where: { imageUrl: imageUrl! },
-    });
-
-    if (existing) {
-      const updated = await prisma.inspirationImage.update({
-        where: { id: existing.id },
-        data: { saved: false },
-      });
-      return NextResponse.json(updated);
-    }
-
-    return NextResponse.json({ error: 'Image not found' }, { status: 404 });
-  } catch (error) {
-    console.error('Error unsaving image:', error);
-    return NextResponse.json(
-      { error: 'Failed to unsave image' },
-      { status: 500 }
-    );
+    )
   }
 }

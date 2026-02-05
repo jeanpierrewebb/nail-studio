@@ -1,78 +1,88 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { getTurso, generateId } from '@/lib/turso'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
-
-    const [collections, total] = await Promise.all([
-      prisma.collection.findMany({
-        orderBy: { createdAt: 'desc' },
-        skip: offset,
-        take: limit,
-        include: {
-          inspirationImages: {
-            select: { id: true, imageUrl: true },
-            take: 4,
-          },
+    const turso = getTurso()
+    
+    // Get all collections
+    const collectionsResult = await turso.execute(
+      'SELECT * FROM NailCollection ORDER BY createdAt DESC'
+    )
+    
+    // Get image counts and cover images for each collection
+    const collections = await Promise.all(
+      collectionsResult.rows.map(async (row) => {
+        const countResult = await turso.execute({
+          sql: 'SELECT COUNT(*) as count FROM NailInspirationImage WHERE collectionId = ?',
+          args: [row.id as string]
+        })
+        
+        const coverResult = await turso.execute({
+          sql: 'SELECT imageUrl FROM NailInspirationImage WHERE collectionId = ? LIMIT 1',
+          args: [row.id as string]
+        })
+        
+        return {
+          id: row.id,
+          name: row.name,
+          description: row.description,
+          coverImageUrl: row.coverImageUrl || (coverResult.rows[0]?.imageUrl as string) || null,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
           _count: {
-            select: { inspirationImages: true },
-          },
-        },
-      }),
-      prisma.collection.count(),
-    ]);
+            images: Number(countResult.rows[0]?.count || 0)
+          }
+        }
+      })
+    )
 
-    return NextResponse.json({
-      collections,
-      total,
-      limit,
-      offset,
-    });
+    return NextResponse.json({ collections })
   } catch (error) {
-    console.error('Error fetching collections:', error);
+    console.error('Failed to fetch collections:', error)
     return NextResponse.json(
       { error: 'Failed to fetch collections' },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, description } = body;
+    const { name, description } = await request.json()
 
-    if (!name || typeof name !== 'string' || !name.trim()) {
+    if (!name) {
       return NextResponse.json(
         { error: 'Name is required' },
         { status: 400 }
-      );
+      )
     }
 
-    const collection = await prisma.collection.create({
-      data: {
-        name: name.trim(),
-        description: description?.trim() || null,
-      },
-      include: {
-        inspirationImages: {
-          select: { id: true, imageUrl: true },
-        },
-        _count: {
-          select: { inspirationImages: true },
-        },
-      },
-    });
+    const turso = getTurso()
+    const id = generateId()
+    const now = new Date().toISOString()
 
-    return NextResponse.json(collection, { status: 201 });
+    await turso.execute({
+      sql: 'INSERT INTO NailCollection (id, name, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)',
+      args: [id, name, description || null, now, now]
+    })
+
+    const collection = {
+      id,
+      name,
+      description: description || null,
+      coverImageUrl: null,
+      createdAt: now,
+      updatedAt: now,
+      _count: { images: 0 }
+    }
+
+    return NextResponse.json(collection, { status: 201 })
   } catch (error) {
-    console.error('Error creating collection:', error);
+    console.error('Failed to create collection:', error)
     return NextResponse.json(
       { error: 'Failed to create collection' },
       { status: 500 }
-    );
+    )
   }
 }

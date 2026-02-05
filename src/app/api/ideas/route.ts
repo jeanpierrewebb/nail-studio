@@ -1,72 +1,80 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { getTurso, generateId } from '@/lib/turso'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const turso = getTurso()
+    
+    const ideasResult = await turso.execute(
+      'SELECT * FROM NailIdea ORDER BY createdAt DESC'
+    )
 
-    const [ideas, total] = await Promise.all([
-      prisma.idea.findMany({
-        orderBy: { createdAt: 'desc' },
-        skip: offset,
-        take: limit,
-        include: {
-          inspirationImages: {
-            select: { id: true, imageUrl: true, title: true },
-          },
-        },
-      }),
-      prisma.idea.count(),
-    ]);
+    // Get images for each idea
+    const ideas = await Promise.all(
+      ideasResult.rows.map(async (row) => {
+        const imagesResult = await turso.execute({
+          sql: 'SELECT * FROM NailInspirationImage WHERE ideaId = ?',
+          args: [row.id as string]
+        })
 
-    return NextResponse.json({
-      ideas,
-      total,
-      limit,
-      offset,
-    });
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          tags: row.tags,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          images: imagesResult.rows
+        }
+      })
+    )
+
+    return NextResponse.json({ ideas })
   } catch (error) {
-    console.error('Error fetching ideas:', error);
+    console.error('Failed to fetch ideas:', error)
     return NextResponse.json(
       { error: 'Failed to fetch ideas' },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { title, description, tags } = body;
+    const { title, description, tags } = await request.json()
 
-    if (!title || typeof title !== 'string' || !title.trim()) {
+    if (!title) {
       return NextResponse.json(
         { error: 'Title is required' },
         { status: 400 }
-      );
+      )
     }
 
-    const idea = await prisma.idea.create({
-      data: {
-        title: title.trim(),
-        description: description?.trim() || null,
-        tags: tags || '[]',
-      },
-      include: {
-        inspirationImages: {
-          select: { id: true, imageUrl: true, title: true },
-        },
-      },
-    });
+    const turso = getTurso()
+    const id = generateId()
+    const now = new Date().toISOString()
 
-    return NextResponse.json(idea, { status: 201 });
+    await turso.execute({
+      sql: 'INSERT INTO NailIdea (id, title, description, tags, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)',
+      args: [id, title, description || null, JSON.stringify(tags || []), now, now]
+    })
+
+    const idea = {
+      id,
+      title,
+      description: description || null,
+      tags: JSON.stringify(tags || []),
+      createdAt: now,
+      updatedAt: now,
+      images: []
+    }
+
+    return NextResponse.json(idea, { status: 201 })
   } catch (error) {
-    console.error('Error creating idea:', error);
+    console.error('Failed to create idea:', error)
     return NextResponse.json(
       { error: 'Failed to create idea' },
       { status: 500 }
-    );
+    )
   }
 }

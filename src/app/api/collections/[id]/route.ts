@@ -1,42 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { getTurso } from '@/lib/turso'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  
   try {
-    const collection = await prisma.collection.findUnique({
-      where: { id },
-      include: {
-        inspirationImages: {
-          select: {
-            id: true,
-            imageUrl: true,
-            title: true,
-            description: true,
-            source: true,
-            sourceUrl: true,
-            saved: true,
-          },
-          orderBy: { createdAt: 'desc' },
-        },
-        _count: {
-          select: { inspirationImages: true },
-        },
-      },
-    });
+    const { id } = await params
+    const turso = getTurso()
+    
+    const collectionResult = await turso.execute({
+      sql: 'SELECT * FROM NailCollection WHERE id = ?',
+      args: [id]
+    })
 
-    if (!collection) {
-      return NextResponse.json({ error: 'Collection not found' }, { status: 404 });
+    if (collectionResult.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Collection not found' },
+        { status: 404 }
+      )
     }
 
-    return NextResponse.json(collection);
+    const row = collectionResult.rows[0]
+    
+    // Get images in this collection
+    const imagesResult = await turso.execute({
+      sql: 'SELECT * FROM NailInspirationImage WHERE collectionId = ? ORDER BY createdAt DESC',
+      args: [id]
+    })
+
+    const collection = {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      coverImageUrl: row.coverImageUrl,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      images: imagesResult.rows.map(img => ({
+        id: img.id,
+        sourceUrl: img.sourceUrl,
+        imageUrl: img.imageUrl,
+        source: img.source,
+        title: img.title,
+        description: img.description,
+        saved: img.saved,
+        createdAt: img.createdAt,
+        ideaId: img.ideaId,
+        collectionId: img.collectionId
+      }))
+    }
+
+    return NextResponse.json({ collection })
   } catch (error) {
-    console.error('Error fetching collection:', error);
-    return NextResponse.json({ error: 'Failed to fetch collection' }, { status: 500 });
+    console.error('Failed to fetch collection:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch collection' },
+      { status: 500 }
+    )
   }
 }
 
@@ -44,25 +64,65 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  
   try {
-    const body = await request.json();
-    const { name, description, coverImageUrl } = body;
+    const { id } = await params
+    const { name, description, coverImageUrl } = await request.json()
+    const turso = getTurso()
+    const now = new Date().toISOString()
 
-    const collection = await prisma.collection.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name: name.trim() }),
-        ...(description !== undefined && { description }),
-        ...(coverImageUrl !== undefined && { coverImageUrl }),
-      },
-    });
+    // Build update query dynamically
+    const updates: string[] = ['updatedAt = ?']
+    const args: (string | null)[] = [now]
 
-    return NextResponse.json(collection);
+    if (name !== undefined) {
+      updates.push('name = ?')
+      args.push(name)
+    }
+    if (description !== undefined) {
+      updates.push('description = ?')
+      args.push(description)
+    }
+    if (coverImageUrl !== undefined) {
+      updates.push('coverImageUrl = ?')
+      args.push(coverImageUrl)
+    }
+
+    args.push(id) // WHERE clause
+
+    await turso.execute({
+      sql: `UPDATE NailCollection SET ${updates.join(', ')} WHERE id = ?`,
+      args
+    })
+
+    // Fetch updated collection
+    const result = await turso.execute({
+      sql: 'SELECT * FROM NailCollection WHERE id = ?',
+      args: [id]
+    })
+
+    const imagesResult = await turso.execute({
+      sql: 'SELECT * FROM NailInspirationImage WHERE collectionId = ?',
+      args: [id]
+    })
+
+    const row = result.rows[0]
+    const collection = {
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      coverImageUrl: row.coverImageUrl,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      images: imagesResult.rows
+    }
+
+    return NextResponse.json(collection)
   } catch (error) {
-    console.error('Error updating collection:', error);
-    return NextResponse.json({ error: 'Failed to update collection' }, { status: 500 });
+    console.error('Failed to update collection:', error)
+    return NextResponse.json(
+      { error: 'Failed to update collection' },
+      { status: 500 }
+    )
   }
 }
 
@@ -70,22 +130,28 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
-  
   try {
-    // Unlink images from collection first
-    await prisma.inspirationImage.updateMany({
-      where: { collectionId: id },
-      data: { collectionId: null },
-    });
+    const { id } = await params
+    const turso = getTurso()
+    
+    // Remove collection reference from images first
+    await turso.execute({
+      sql: 'UPDATE NailInspirationImage SET collectionId = NULL WHERE collectionId = ?',
+      args: [id]
+    })
+    
+    // Delete the collection
+    await turso.execute({
+      sql: 'DELETE FROM NailCollection WHERE id = ?',
+      args: [id]
+    })
 
-    await prisma.collection.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting collection:', error);
-    return NextResponse.json({ error: 'Failed to delete collection' }, { status: 500 });
+    console.error('Failed to delete collection:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete collection' },
+      { status: 500 }
+    )
   }
 }

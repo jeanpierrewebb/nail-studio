@@ -34,9 +34,9 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Desktop / Tablet Top Nav */}
+      {/* Desktop / Tablet Top Nav - hidden on mobile */}
       <nav style={{ backgroundColor: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #fce7f3' }}
-           className="sticky top-0 z-50">
+           className="hidden sm:block sticky top-0 z-50">
         <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0 1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '4rem' }}>
             {/* Logo */}
@@ -48,8 +48,7 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Links */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                 className="hidden sm:flex">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}

@@ -19,7 +19,7 @@ interface ImageLightboxProps {
   initialIndex: number;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (image: LightboxImage) => void;
+  onSave?: (image: LightboxImage) => void;
 }
 
 export default function ImageLightbox({
@@ -195,15 +195,17 @@ export default function ImageLightbox({
             >
               {img.source} ↗
             </a>
-            <button
-              onClick={() => onSave(img)}
-              className="btn-primary text-sm py-2.5 px-5 whitespace-nowrap flex-shrink-0"
-            >
-              <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-              </svg>
-              Save to Collection
-            </button>
+{onSave && (
+              <button
+                onClick={() => onSave(img)}
+                className="btn-primary text-sm py-2.5 px-5 whitespace-nowrap flex-shrink-0"
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
+                </svg>
+                Save to Collection
+              </button>
+            )}
           </div>
 
           {/* Notes area — only for saved images */}

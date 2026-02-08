@@ -43,6 +43,8 @@ model Collection {
   name             String
   description      String?
   coverImageUrl    String?
+  shareId          String?            @unique
+  isPublic         Boolean            @default(false)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   inspirationImages InspirationImage[]

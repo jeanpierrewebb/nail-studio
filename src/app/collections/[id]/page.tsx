@@ -14,6 +14,8 @@ import {
   deleteCollection,
   removeImageFromCollection,
   saveImageToCollection,
+  enableSharing,
+  disableSharing,
   type StoredImage,
 } from '@/lib/storage';
 
@@ -21,6 +23,8 @@ interface CollectionData {
   id: string;
   name: string;
   description: string | null;
+  shareId: string | null;
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
   inspirationImages: StoredImage[];
@@ -89,6 +93,42 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
     deleteCollection(id);
     toast.info('Collection deleted');
     router.push('/collections');
+  };
+
+  const handleShare = async () => {
+    // If already public, just copy the link
+    if (collection?.isPublic && collection.shareId) {
+      const shareUrl = `${window.location.origin}/shared/${collection.shareId}`;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Link copied to clipboard! 📋');
+      } catch {
+        // Fallback for browsers that don't support clipboard API
+        toast.info(`Share link: ${shareUrl}`);
+      }
+      return;
+    }
+
+    // Enable sharing and generate shareId
+    const updated = enableSharing(id);
+    if (updated) {
+      setCollection(prev => prev ? { ...prev, shareId: updated.shareId, isPublic: updated.isPublic } : prev);
+      const shareUrl = `${window.location.origin}/shared/${updated.shareId}`;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Sharing enabled! Link copied to clipboard 🔗');
+      } catch {
+        toast.info(`Share link: ${shareUrl}`);
+      }
+    }
+  };
+
+  const handleDisableSharing = () => {
+    const updated = disableSharing(id);
+    if (updated) {
+      setCollection(prev => prev ? { ...prev, isPublic: false } : prev);
+      toast.info('Sharing disabled');
+    }
   };
 
   const handleAddByUrl = (e: React.FormEvent) => {
@@ -226,6 +266,32 @@ export default function CollectionDetailPage({ params }: { params: Promise<{ id:
 
           {!editing && (
             <div className="flex items-center space-x-2 ml-4">
+              {/* Share Button */}
+              <button
+                onClick={handleShare}
+                className={`p-2 rounded-lg transition-colors ${
+                  collection.isPublic
+                    ? 'text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
+                title={collection.isPublic ? 'Sharing enabled - click to copy link' : 'Share collection'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </button>
+              {/* Disable sharing button (shown when public) */}
+              {collection.isPublic && (
+                <button
+                  onClick={handleDisableSharing}
+                  className="p-2 text-gray-400 hover:text-orange-600 rounded-lg hover:bg-orange-50 transition-colors"
+                  title="Disable sharing"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  </svg>
+                </button>
+              )}
               <button onClick={() => setEditing(true)} className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors" title="Edit collection">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

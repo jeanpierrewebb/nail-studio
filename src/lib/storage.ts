@@ -6,6 +6,8 @@ export interface StoredCollection {
   id: string;
   name: string;
   description: string | null;
+  shareId: string | null;
+  isPublic: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,6 +64,8 @@ export function createCollection(name: string, description?: string): StoredColl
     id: generateId(),
     name: name.trim(),
     description: description?.trim() || null,
+    shareId: null,
+    isPublic: false,
     createdAt: now,
     updatedAt: now,
   };
@@ -70,7 +74,7 @@ export function createCollection(name: string, description?: string): StoredColl
   return collection;
 }
 
-export function updateCollection(id: string, updates: { name?: string; description?: string | null }): StoredCollection | null {
+export function updateCollection(id: string, updates: { name?: string; description?: string | null; shareId?: string | null; isPublic?: boolean }): StoredCollection | null {
   const collections = getCollections();
   const index = collections.findIndex(c => c.id === id);
   if (index === -1) return null;
@@ -79,10 +83,45 @@ export function updateCollection(id: string, updates: { name?: string; descripti
     ...collections[index],
     ...(updates.name !== undefined && { name: updates.name.trim() }),
     ...(updates.description !== undefined && { description: updates.description }),
+    ...(updates.shareId !== undefined && { shareId: updates.shareId }),
+    ...(updates.isPublic !== undefined && { isPublic: updates.isPublic }),
     updatedAt: new Date().toISOString(),
   };
   localStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
   return collections[index];
+}
+
+export function generateShareId(): string {
+  return Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+}
+
+export function enableSharing(id: string): StoredCollection | null {
+  const collection = getCollection(id);
+  if (!collection) return null;
+  
+  const shareId = collection.shareId || generateShareId();
+  return updateCollection(id, { shareId, isPublic: true });
+}
+
+export function disableSharing(id: string): StoredCollection | null {
+  return updateCollection(id, { isPublic: false });
+}
+
+export function getCollectionByShareId(shareId: string): StoredCollection | null {
+  const collections = getCollections();
+  return collections.find(c => c.shareId === shareId && c.isPublic) || null;
+}
+
+export function getCollectionWithImagesByShareId(shareId: string) {
+  const collection = getCollectionByShareId(shareId);
+  if (!collection) return null;
+  
+  const images = getImagesForCollection(collection.id);
+  return {
+    ...collection,
+    inspirationImages: images,
+    _count: { inspirationImages: images.length },
+  };
 }
 
 export function deleteCollection(id: string): boolean {
